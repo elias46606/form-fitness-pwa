@@ -1,7 +1,7 @@
 /* FORM — profil.js — Profil-Tab: Angaben, Ziele, Export/Import/Reset. */
 import { renderHeute } from './heute.js';
 import { ALL_KEYS, K, calcGoals, getProfile, saveJSON, todayKey } from './storage.js';
-import { closeModal, openModal, showToast } from './ui.js';
+import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
 
   /* ==========================================================================
      PROFIL
@@ -69,27 +69,9 @@ import { closeModal, openModal, showToast } from './ui.js';
     `);
 
     let gender = profile.gender, activity = profile.activity, goal = profile.goal;
-    body.querySelector('#ep-gender').addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
-      if (!btn) return;
-      [...body.querySelector('#ep-gender').children].forEach((c) => c.classList.remove('active'));
-      btn.classList.add('active');
-      gender = btn.dataset.value;
-    });
-    body.querySelector('#ep-activity').addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
-      if (!btn) return;
-      [...body.querySelector('#ep-activity').children].forEach((c) => c.classList.remove('active'));
-      btn.classList.add('active');
-      activity = btn.dataset.value;
-    });
-    body.querySelector('#ep-goal').addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
-      if (!btn) return;
-      [...body.querySelector('#ep-goal').children].forEach((c) => c.classList.remove('active'));
-      btn.classList.add('active');
-      goal = btn.dataset.value;
-    });
+    bindChipSelect(body.querySelector('#ep-gender'), (value) => { gender = value; });
+    bindChipSelect(body.querySelector('#ep-activity'), (value) => { activity = value; });
+    bindChipSelect(body.querySelector('#ep-goal'), (value) => { goal = value; });
 
     body.querySelector('#ep-save').addEventListener('click', () => {
       const updated = {

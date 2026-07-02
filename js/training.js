@@ -3,7 +3,7 @@ import { BODYWEIGHT_PROGRESSIONS, EXERCISES, MUSCLE_GROUPS, WORKOUT_PLANS } from
 import { formatDaySummaryLine, renderHeute } from './heute.js';
 import { K, WEEKDAY_NAMES, WEEKDAY_SHORT, getActivePlanObj, getDay, getExerciseById, getPlanById, loadJSON, round, round10, saveJSON, todayKey, uid } from './storage.js';
 import { startIntervalWorkout } from './timer.js';
-import { closeModal, openModal, showToast } from './ui.js';
+import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
 
   /* ==========================================================================
      TRAINING — Übungsbrowser
@@ -18,11 +18,8 @@ import { closeModal, openModal, showToast } from './ui.js';
         .map((g) => `<button class="chip ${g === exerciseFilter ? 'active' : ''}" data-group="${g}">${g}</button>`)
         .join('');
       filterEl.dataset.built = '1';
-      filterEl.addEventListener('click', (e) => {
-        const btn = e.target.closest('.chip');
-        if (!btn) return;
+      bindChipSelect(filterEl, (value, btn) => {
         exerciseFilter = btn.dataset.group;
-        [...filterEl.children].forEach((c) => c.classList.toggle('active', c === btn));
         renderExerciseList();
       });
     }
@@ -229,14 +226,7 @@ import { closeModal, openModal, showToast } from './ui.js';
     `);
 
     body.querySelector('#pb-name').addEventListener('input', (e) => (planBuilder.name = e.target.value));
-    const levelGroup = body.querySelector('#pb-level');
-    levelGroup.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
-      if (!btn) return;
-      [...levelGroup.children].forEach((c) => c.classList.remove('active'));
-      btn.classList.add('active');
-      planBuilder.level = btn.dataset.value;
-    });
+    bindChipSelect(body.querySelector('#pb-level'), (value) => { planBuilder.level = value; });
 
     body.querySelector('#pb-add-day').addEventListener('click', () => {
       planBuilder.days.push({
@@ -725,11 +715,8 @@ import { closeModal, openModal, showToast } from './ui.js';
   }
 
   export function initWorkoutModeHandlers() {
-    document.getElementById('rest-options').addEventListener('click', (e) => {
-      const chip = e.target.closest('.chip');
-      if (!chip) return;
+    bindChipSelect(document.getElementById('rest-options'), (value, chip) => {
       restSeconds = parseInt(chip.dataset.sec, 10);
-      document.querySelectorAll('#rest-options .chip').forEach((c) => c.classList.toggle('active', c === chip));
       runRestCountdown(restSeconds);
     });
     document.getElementById('rest-skip').addEventListener('click', () => {

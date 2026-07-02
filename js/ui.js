@@ -18,40 +18,34 @@ import { initTrainingHandlers, initWorkoutModeHandlers, renderExerciseBrowser, r
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
   }
+
+  /* Einfachauswahl-Chipgruppe: markiert den geklickten Chip als aktiv und
+     ruft onChange(value, button) auf. Wird von Formularen mit Chip-Auswahl
+     (Onboarding, Mahlzeit, Level, Kategorie, …) gemeinsam genutzt. */
+  export function bindChipSelect(container, onChange) {
+    container.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip');
+      if (!btn) return;
+      [...container.children].forEach((c) => c.classList.remove('active'));
+      btn.classList.add('active');
+      onChange(btn.dataset.value, btn);
+    });
+  }
+
   /* ==========================================================================
      Onboarding
      ========================================================================== */
 
-  export let obState = { gender: null, activity: null, goal: null, step: 1 };
+  export let obState = { gender: null, activity: null, goal: null };
 
   export function initOnboarding() {
     const genderGroup = document.getElementById('ob-gender');
     const activityGroup = document.getElementById('ob-activity');
     const goalGroup = document.getElementById('ob-goal');
 
-    genderGroup.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
-      if (!btn) return;
-      [...genderGroup.children].forEach((c) => c.classList.remove('active'));
-      btn.classList.add('active');
-      obState.gender = btn.dataset.value;
-    });
-
-    activityGroup.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
-      if (!btn) return;
-      [...activityGroup.children].forEach((c) => c.classList.remove('active'));
-      btn.classList.add('active');
-      obState.activity = btn.dataset.value;
-    });
-
-    goalGroup.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
-      if (!btn) return;
-      [...goalGroup.children].forEach((c) => c.classList.remove('active'));
-      btn.classList.add('active');
-      obState.goal = btn.dataset.value;
-    });
+    bindChipSelect(genderGroup, (value) => { obState.gender = value; });
+    bindChipSelect(activityGroup, (value) => { obState.activity = value; });
+    bindChipSelect(goalGroup, (value) => { obState.goal = value; });
 
     document.getElementById('ob-next').addEventListener('click', () => {
       const age = document.getElementById('ob-age').value;

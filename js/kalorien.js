@@ -3,7 +3,7 @@ import { renderHeute } from './heute.js';
 import { renderRecipeList, renderRecipesPanel } from './rezepte.js';
 import { openScanner } from './scanner.js';
 import { K, MEALS, allFoods, findFood, getDay, loadJSON, round, saveDay, saveJSON, todayKey, uid } from './storage.js';
-import { closeModal, openModal, showToast } from './ui.js';
+import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
 
   /* ==========================================================================
      KALORIEN
@@ -154,13 +154,7 @@ import { closeModal, openModal, showToast } from './ui.js';
 
     let selectedMeal = defaultMeal;
     const mealGroup = body.querySelector('#af-meal');
-    mealGroup.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
-      if (!btn) return;
-      [...mealGroup.children].forEach((c) => c.classList.remove('active'));
-      btn.classList.add('active');
-      selectedMeal = btn.dataset.value;
-    });
+    bindChipSelect(mealGroup, (value) => { selectedMeal = value; });
 
     const amountInput = body.querySelector('#af-amount');
     function updatePreview() {

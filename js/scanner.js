@@ -2,7 +2,7 @@
 import { renderHeute } from './heute.js';
 import { openCustomFoodModal, renderKalorien } from './kalorien.js';
 import { K, MEALS, getDay, loadJSON, round, round10, saveDay, saveJSON, todayKey, uid } from './storage.js';
-import { closeModal, openModal, showToast } from './ui.js';
+import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
 
   /* ==========================================================================
      BARCODE-SCANNER
@@ -348,13 +348,7 @@ import { closeModal, openModal, showToast } from './ui.js';
 
     let selectedMeal = 'Frühstück';
     const mealGroup = body.querySelector('#pd-meal');
-    mealGroup.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
-      if (!btn) return;
-      [...mealGroup.children].forEach((c) => c.classList.remove('active'));
-      btn.classList.add('active');
-      selectedMeal = btn.dataset.value;
-    });
+    bindChipSelect(mealGroup, (value) => { selectedMeal = value; });
 
     const amountInput = body.querySelector('#pd-amount');
     function updatePreview() {

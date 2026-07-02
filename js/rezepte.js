@@ -3,7 +3,7 @@ import { RECIPES, buildRecipe, ing } from '../data.js';
 import { renderHeute } from './heute.js';
 import { renderKalorien } from './kalorien.js';
 import { K, MEALS, allFoods, findFood, getDay, getProfile, loadJSON, round, saveDay, saveJSON, todayKey, uid } from './storage.js';
-import { closeModal, openModal, showToast } from './ui.js';
+import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
 
   /* ==========================================================================
      REZEPTE
@@ -43,11 +43,8 @@ import { closeModal, openModal, showToast } from './ui.js';
       kategorieEl.innerHTML = cats
         .map((c) => `<button class="chip ${c.value === recipeFilterState.kategorie ? 'active' : ''}" data-value="${c.value}">${c.label}</button>`)
         .join('');
-      kategorieEl.addEventListener('click', (e) => {
-        const btn = e.target.closest('.chip');
-        if (!btn) return;
-        recipeFilterState.kategorie = btn.dataset.value;
-        [...kategorieEl.children].forEach((c) => c.classList.toggle('active', c === btn));
+      bindChipSelect(kategorieEl, (value) => {
+        recipeFilterState.kategorie = value;
         renderRecipeList();
       });
       kategorieEl.dataset.built = '1';
@@ -212,20 +209,14 @@ import { closeModal, openModal, showToast } from './ui.js';
     renderRecipeIngredients(recipe);
     updateRecipeMetaLine(recipe);
 
-    document.getElementById('recipe-portions').addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
-      if (!btn) return;
+    bindChipSelect(document.getElementById('recipe-portions'), (value, btn) => {
       recipePortionState.factor = parseFloat(btn.dataset.factor);
-      [...document.getElementById('recipe-portions').children].forEach((c) => c.classList.toggle('active', c === btn));
       renderRecipeIngredients(recipe);
       updateRecipeMetaLine(recipe);
     });
 
-    document.getElementById('recipe-meal-select').addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
-      if (!btn) return;
-      recipeSelectedMeal = btn.dataset.value;
-      [...document.getElementById('recipe-meal-select').children].forEach((c) => c.classList.toggle('active', c === btn));
+    bindChipSelect(document.getElementById('recipe-meal-select'), (value) => {
+      recipeSelectedMeal = value;
     });
 
     document.getElementById('recipe-copy-list').addEventListener('click', () => {
@@ -342,20 +333,8 @@ import { closeModal, openModal, showToast } from './ui.js';
       <button class="btn btn-primary btn-full" id="rb-save" style="margin-top:16px;">Rezept speichern</button>
     `);
 
-    body.querySelector('#rb-kategorie').addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
-      if (!btn) return;
-      recipeBuilder.kategorie = btn.dataset.value;
-      [...body.querySelector('#rb-kategorie').children].forEach((c) => c.classList.remove('active'));
-      btn.classList.add('active');
-    });
-    body.querySelector('#rb-schwierigkeit').addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
-      if (!btn) return;
-      recipeBuilder.schwierigkeit = btn.dataset.value;
-      [...body.querySelector('#rb-schwierigkeit').children].forEach((c) => c.classList.remove('active'));
-      btn.classList.add('active');
-    });
+    bindChipSelect(body.querySelector('#rb-kategorie'), (value) => { recipeBuilder.kategorie = value; });
+    bindChipSelect(body.querySelector('#rb-schwierigkeit'), (value) => { recipeBuilder.schwierigkeit = value; });
 
     body.querySelector('#rb-ing-search').addEventListener('input', (e) => {
       const q = e.target.value.trim().toLowerCase();
