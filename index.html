@@ -122,6 +122,13 @@
         <div class="card-label">TRAINING HEUTE</div>
         <div id="today-workout"></div>
       </div>
+
+      <div class="hr"></div>
+
+      <div class="card">
+        <button id="btn-meal-suggest" class="btn btn-ghost btn-full">Was passt noch heute?</button>
+        <div id="meal-suggestions"></div>
+      </div>
     </section>
 
     <!-- ---------- 2. KALORIEN ---------- -->
@@ -131,28 +138,43 @@
         <h1 class="headline">Iss bewusst,<br><span class="fat">nicht weniger.</span></h1>
       </header>
 
-      <div class="search-row search-row-flex">
-        <input type="text" id="food-search" placeholder="Lebensmittel suchen…" autocomplete="off">
-        <button id="btn-scan" class="btn btn-primary btn-scan" type="button">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="2" height="18"/><rect x="21" y="3" width="1" height="18"/></svg>
-          <span>Scannen</span>
-        </button>
+      <div class="tab-row" id="kalorien-subtabs">
+        <button class="subtab active" data-subtab="tagebuch">TAGEBUCH</button>
+        <button class="subtab" data-subtab="rezepte">REZEPTE</button>
       </div>
 
-      <div id="quick-recent" class="chip-scroll"></div>
+      <div id="kalorien-tagebuch" class="training-panel">
+        <div class="search-row search-row-flex">
+          <input type="text" id="food-search" placeholder="Lebensmittel suchen…" autocomplete="off">
+          <button id="btn-scan" class="btn btn-primary btn-scan" type="button">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="2" height="18"/><rect x="21" y="3" width="1" height="18"/></svg>
+            <span>Scannen</span>
+          </button>
+        </div>
 
-      <div id="food-search-results" class="food-results"></div>
+        <div id="quick-recent" class="chip-scroll"></div>
 
-      <div class="hr"></div>
+        <div id="food-search-results" class="food-results"></div>
 
-      <div class="card">
-        <div class="card-label">EIGENES LEBENSMITTEL</div>
-        <button id="btn-custom-food" class="btn btn-ghost btn-full">+ Eigenes Lebensmittel anlegen</button>
+        <div class="hr"></div>
+
+        <div class="card">
+          <div class="card-label">EIGENES LEBENSMITTEL</div>
+          <button id="btn-custom-food" class="btn btn-ghost btn-full">+ Eigenes Lebensmittel anlegen</button>
+        </div>
+
+        <div class="hr"></div>
+
+        <div id="meals-container"></div>
       </div>
 
-      <div class="hr"></div>
-
-      <div id="meals-container"></div>
+      <div id="kalorien-rezepte" class="training-panel hidden">
+        <div class="section-label">03 · REZEPTE</div>
+        <div class="chip-scroll" id="recipe-filter-kategorie"></div>
+        <div class="chip-scroll" id="recipe-filter-tags"></div>
+        <div id="recipe-list"></div>
+        <button id="btn-custom-recipe" class="btn btn-ghost btn-full">+ Eigenes Rezept erstellen</button>
+      </div>
     </section>
 
     <!-- ---------- 3. TRAINING ---------- -->
@@ -350,6 +372,17 @@
       </div>
 
       <button class="btn btn-ghost btn-full" id="scanner-cancel">Abbrechen</button>
+    </div>
+  </div>
+
+  <!-- ========== REZEPT-DETAIL OVERLAY ========== -->
+  <div id="recipe-overlay" class="overlay hidden">
+    <div class="recipe-overlay-inner">
+      <div class="recipe-overlay-top">
+        <button class="btn-close" id="recipe-back">←</button>
+        <button class="btn-close" id="recipe-fav-btn">☆</button>
+      </div>
+      <div id="recipe-detail-content"></div>
     </div>
   </div>
 

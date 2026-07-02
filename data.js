@@ -145,6 +145,9 @@ const FOOD_DB = [
   { id: 'senf', name: 'Senf', kcal: 76, protein: 4.4, carbs: 7.6, fat: 3.9 },
   { id: 'sojasauce', name: 'Sojasauce', kcal: 60, protein: 6, carbs: 6, fat: 0 },
   { id: 'essig', name: 'Essig', kcal: 21, protein: 0, carbs: 0.4, fat: 0 },
+  { id: 'vollkorn_wrap', name: 'Vollkorn-Tortilla-Wrap', kcal: 275, protein: 9, carbs: 46, fat: 6 },
+  { id: 'kokosmilch', name: 'Kokosmilch (Dose)', kcal: 197, protein: 2, carbs: 3, fat: 20 },
+  { id: 'gruene_bohnen', name: 'Grüne Bohnen', kcal: 31, protein: 1.8, carbs: 7, fat: 0.2 },
 ];
 
 /* Übungen: Home-Training ohne Geräte (Körpergewicht + optional Kurzhanteln/Band) */
@@ -421,6 +424,201 @@ const WORKOUT_PLANS = [
   },
 ];
 
+/* ==========================================================================
+   Rezepte — Zutaten referenzieren FOOD_DB per foodId, damit Nährwerte
+   automatisch und konsistent aus den Zutaten berechnet werden.
+   ========================================================================== */
+
+function ing(foodId, grams, menge, einheit) {
+  return { foodId, grams, menge: menge !== undefined ? menge : grams, einheit: einheit || 'g' };
+}
+
+const RECIPES_RAW = [
+  // ---------- FRÜHSTÜCK (10) ----------
+  { id: 'rec_porridge_skyr', name: 'Protein-Porridge mit Skyr', kategorie: 'Frühstück', zubereitungszeit: 8, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('haferflocken', 50), ing('skyr', 150), ing('banane', 60), ing('heidelbeeren', 50)],
+    zubereitung: ['Haferflocken mit etwas Wasser oder Milch kurz aufkochen und quellen lassen.', 'Skyr unterrühren.', 'Banane in Scheiben schneiden und mit den Heidelbeeren darauf verteilen.'] },
+  { id: 'rec_ruehrei_vollkornbrot', name: 'Rührei auf Vollkornbrot', kategorie: 'Frühstück', zubereitungszeit: 10, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('ei', 150, 3, 'Stück'), ing('brot_vollkorn', 60), ing('butter', 5), ing('tomate', 50)],
+    zubereitung: ['Eier verquirlen, salzen und pfeffern.', 'Butter in der Pfanne erhitzen und die Eier bei mittlerer Hitze stocken lassen, dabei stetig rühren.', 'Brot toasten und mit dem Rührei und Tomatenscheiben servieren.'] },
+  { id: 'rec_overnight_oats', name: 'Overnight Oats mit Beeren', kategorie: 'Frühstück', zubereitungszeit: 5, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('haferflocken', 50), ing('milch_15', 150), ing('chiasamen', 10), ing('himbeeren', 60), ing('honig', 10)],
+    zubereitung: ['Haferflocken, Milch, Chiasamen und Honig in einem Glas vermischen.', 'Über Nacht abgedeckt im Kühlschrank quellen lassen.', 'Am Morgen mit den Himbeeren toppen.'] },
+  { id: 'rec_quark_beeren_nuesse', name: 'Quark mit Beeren und Nüssen', kategorie: 'Frühstück', zubereitungszeit: 5, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('magerquark', 200), ing('erdbeeren', 80), ing('walnuesse', 15), ing('honig', 10)],
+    zubereitung: ['Magerquark glattrühren und mit Honig verfeinern.', 'Erdbeeren klein schneiden und unterheben.', 'Mit gehackten Walnüssen bestreuen.'] },
+  { id: 'rec_protein_pancakes', name: 'Protein-Pancakes', kategorie: 'Frühstück', zubereitungszeit: 15, schwierigkeit: 'mittel', vegetarisch: true, vegan: false,
+    zutaten: [ing('haferflocken', 50), ing('ei', 100, 2, 'Stück'), ing('skyr', 50), ing('banane', 60)],
+    zubereitung: ['Haferflocken, Eier, Skyr und die halbe Banane im Mixer glatt pürieren.', 'Teig portionsweise in einer beschichteten Pfanne bei mittlerer Hitze von beiden Seiten goldbraun backen.', 'Mit der restlichen Banane in Scheiben servieren.'] },
+  { id: 'rec_griech_joghurt_bowl', name: 'Griechischer Joghurt Bowl', kategorie: 'Frühstück', zubereitungszeit: 5, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('griech_joghurt', 200), ing('mandeln', 15), ing('honig', 10), ing('heidelbeeren', 50)],
+    zubereitung: ['Joghurt in eine Schale füllen.', 'Mit Mandeln und Heidelbeeren toppen.', 'Mit Honig beträufeln.'] },
+  { id: 'rec_toast_avocado_ei', name: 'Vollkorn-Toast mit Avocado und Ei', kategorie: 'Frühstück', zubereitungszeit: 10, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('brot_vollkorn', 60), ing('avocado', 70), ing('ei', 55, 1, 'Stück')],
+    zubereitung: ['Brot toasten.', 'Avocado zerdrücken, salzen und pfeffern, auf dem Toast verteilen.', 'Ei pochieren oder als Spiegelei braten und obenauf legen.'] },
+  { id: 'rec_skyr_porridge_apfel', name: 'Skyr-Porridge mit Zimt und Apfel', kategorie: 'Frühstück', zubereitungszeit: 8, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('skyr', 150), ing('haferflocken', 40), ing('apfel', 100)],
+    zubereitung: ['Haferflocken mit etwas Wasser kurz aufkochen.', 'Skyr und in Würfel geschnittenen Apfel unterrühren.', 'Nach Belieben mit Zimt bestreuen.'] },
+  { id: 'rec_ruehrei_huettenkaese_spinat', name: 'Rührei mit Hüttenkäse und Spinat', kategorie: 'Frühstück', zubereitungszeit: 10, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('ei', 100, 2, 'Stück'), ing('huettenkaese', 100), ing('spinat', 50)],
+    zubereitung: ['Spinat in einer Pfanne kurz zusammenfallen lassen.', 'Verquirlte Eier dazugeben und stocken lassen.', 'Hüttenkäse unterheben und warm servieren.'] },
+  { id: 'rec_banane_hafer_smoothie', name: 'Bananen-Hafer-Smoothie', kategorie: 'Frühstück', zubereitungszeit: 5, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('banane', 120), ing('haferflocken', 30), ing('milch_15', 200), ing('erdnussbutter', 15), ing('proteinpulver', 15)],
+    zubereitung: ['Alle Zutaten in einen Mixer geben.', 'Cremig pürieren.', 'Sofort servieren.'] },
+
+  // ---------- MITTAG (12) ----------
+  { id: 'rec_haehnchen_reis_bowl', name: 'Hähnchen-Reis-Bowl', kategorie: 'Mittag', zubereitungszeit: 25, schwierigkeit: 'mittel', vegetarisch: false, vegan: false,
+    zutaten: [ing('haehnchenbrust', 150), ing('reis_gekocht', 200), ing('brokkoli', 100), ing('olivenoel', 10)],
+    zubereitung: ['Hähnchenbrust würzen und in einer Pfanne mit etwas Öl durchbraten.', 'Brokkoli in Röschen teilen und dämpfen oder kurz kochen.', 'Reis, Hähnchen und Brokkoli in einer Bowl anrichten und mit Olivenöl beträufeln.'] },
+  { id: 'rec_linsen_curry', name: 'Linsen-Curry', kategorie: 'Mittag', zubereitungszeit: 25, schwierigkeit: 'mittel', vegetarisch: true, vegan: true,
+    zutaten: [ing('linsen_gekocht', 200), ing('kokosoel', 10), ing('tomate', 100), ing('reis_gekocht', 150), ing('zwiebel', 40)],
+    zubereitung: ['Zwiebel in Kokosöl glasig dünsten.', 'Tomaten und Currygewürz dazugeben und kurz köcheln.', 'Linsen unterrühren und einige Minuten ziehen lassen.', 'Mit Reis servieren.'] },
+  { id: 'rec_putenstreifen_suesskartoffel', name: 'Putenstreifen mit Süßkartoffel', kategorie: 'Mittag', zubereitungszeit: 25, schwierigkeit: 'mittel', vegetarisch: false, vegan: false,
+    zutaten: [ing('putenbrust', 150), ing('suesskartoffel', 200), ing('paprika', 80), ing('olivenoel', 10)],
+    zubereitung: ['Süßkartoffel würfeln und im Ofen bei 200°C ca. 20 Minuten rösten.', 'Putenbrust in Streifen schneiden und in Olivenöl anbraten.', 'Paprika kurz mitbraten und alles zusammen servieren.'] },
+  { id: 'rec_thunfisch_wrap', name: 'Thunfisch-Wrap', kategorie: 'Mittag', zubereitungszeit: 10, schwierigkeit: 'leicht', vegetarisch: false, vegan: false,
+    zutaten: [ing('thunfisch_dose', 100), ing('vollkorn_wrap', 70), ing('joghurt_natur', 30), ing('eisbergsalat', 30), ing('tomate', 40)],
+    zubereitung: ['Thunfisch abtropfen lassen und mit Joghurt vermengen.', 'Salat und Tomatenwürfel auf dem Wrap verteilen.', 'Thunfischmischung daraufgeben und den Wrap fest einrollen.'] },
+  { id: 'rec_gemuese_omelett', name: 'Gemüse-Omelett', kategorie: 'Mittag', zubereitungszeit: 15, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('ei', 150, 3, 'Stück'), ing('paprika', 50), ing('champignons', 50), ing('zwiebel', 30), ing('feta', 30)],
+    zubereitung: ['Gemüse klein schneiden und in einer Pfanne andünsten.', 'Verquirlte Eier darübergießen und bei niedriger Hitze stocken lassen.', 'Feta zerbröckeln, darüberstreuen und die Pfanne zusammenklappen.'] },
+  { id: 'rec_quinoa_kichererbsen', name: 'Quinoa-Bowl mit Kichererbsen', kategorie: 'Mittag', zubereitungszeit: 20, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('quinoa_gekocht', 180), ing('kichererbsen_gekocht', 100), ing('gurke', 60), ing('feta', 30), ing('olivenoel', 10)],
+    zubereitung: ['Quinoa und Kichererbsen in einer Bowl vermengen.', 'Gurke würfeln und dazugeben.', 'Mit Feta und Olivenöl abschließen.'] },
+  { id: 'rec_haehnchen_avocado_salat', name: 'Hähnchen-Salat mit Avocado', kategorie: 'Mittag', zubereitungszeit: 20, schwierigkeit: 'leicht', vegetarisch: false, vegan: false,
+    zutaten: [ing('haehnchenbrust', 150), ing('feldsalat', 60), ing('avocado', 60), ing('tomate', 60), ing('olivenoel', 10)],
+    zubereitung: ['Hähnchenbrust würzen und braten, dann in Streifen schneiden.', 'Feldsalat, Avocadowürfel und Tomaten in einer Schüssel anrichten.', 'Hähnchen daraufgeben und mit Olivenöl beträufeln.'] },
+  { id: 'rec_nudeln_haehnchen_brokkoli', name: 'Nudeln mit Hähnchen und Brokkoli', kategorie: 'Mittag', zubereitungszeit: 25, schwierigkeit: 'mittel', vegetarisch: false, vegan: false,
+    zutaten: [ing('vollkornnudeln_gekocht', 200), ing('haehnchenbrust', 120), ing('brokkoli', 100), ing('parmesan', 15)],
+    zubereitung: ['Nudeln nach Packungsanweisung kochen.', 'Hähnchenbrust würfeln und anbraten, Brokkoli mitdünsten.', 'Mit den Nudeln vermengen und Parmesan darüberreiben.'] },
+  { id: 'rec_falafel_bowl', name: 'Falafel-Bowl mit Kichererbsen', kategorie: 'Mittag', zubereitungszeit: 25, schwierigkeit: 'mittel', vegetarisch: true, vegan: false,
+    zutaten: [ing('kichererbsen_gekocht', 180), ing('reis_gekocht', 150), ing('gurke', 60), ing('joghurt_natur', 50), ing('olivenoel', 5)],
+    zubereitung: ['Kichererbsen in einer Pfanne mit etwas Öl knusprig anbraten und würzen.', 'Reis und Gurkenwürfel in eine Bowl geben.', 'Kichererbsen daraufgeben und mit einem Klecks Joghurt servieren.'] },
+  { id: 'rec_garnelen_reis_pfanne', name: 'Garnelen-Reis-Pfanne', kategorie: 'Mittag', zubereitungszeit: 20, schwierigkeit: 'mittel', vegetarisch: false, vegan: false,
+    zutaten: [ing('garnelen', 150), ing('reis_gekocht', 180), ing('paprika', 60), ing('zucchini', 60), ing('olivenoel', 10)],
+    zubereitung: ['Paprika und Zucchini in Streifen schneiden und in Olivenöl anbraten.', 'Garnelen dazugeben und kurz mitbraten, bis sie rosa sind.', 'Reis unterheben und alles gut vermengen.'] },
+  { id: 'rec_putengeschnetzeltes_reis', name: 'Putengeschnetzeltes mit Reis', kategorie: 'Mittag', zubereitungszeit: 20, schwierigkeit: 'mittel', vegetarisch: false, vegan: false,
+    zutaten: [ing('putenbrust', 150), ing('reis_gekocht', 180), ing('champignons', 80), ing('zwiebel', 30)],
+    zubereitung: ['Putenbrust in Streifen schneiden und scharf anbraten.', 'Zwiebel und Champignons dazugeben und mitbraten.', 'Mit Reis servieren.'] },
+  { id: 'rec_veggie_bowl_linsen', name: 'Veggie-Bowl mit Linsen', kategorie: 'Mittag', zubereitungszeit: 20, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('linsen_gekocht', 180), ing('suesskartoffel', 150), ing('rucola', 30), ing('joghurt_natur', 30)],
+    zubereitung: ['Süßkartoffel würfeln und im Ofen rösten, bis sie weich ist.', 'Linsen erwärmen und mit der Süßkartoffel und Rucola in einer Bowl anrichten.', 'Mit einem Klecks Joghurt servieren.'] },
+
+  // ---------- ABEND (12) ----------
+  { id: 'rec_lachs_brokkoli', name: 'Lachs mit Brokkoli', kategorie: 'Abend', zubereitungszeit: 20, schwierigkeit: 'leicht', vegetarisch: false, vegan: false,
+    zutaten: [ing('lachs', 150), ing('brokkoli', 150), ing('olivenoel', 10)],
+    zubereitung: ['Lachs salzen und in einer Pfanne mit Olivenöl von beiden Seiten braten.', 'Brokkoli dämpfen, bis er bissfest ist.', 'Zusammen servieren.'] },
+  { id: 'rec_magerquark_fladen', name: 'Magerquark-Fladen', kategorie: 'Abend', zubereitungszeit: 15, schwierigkeit: 'mittel', vegetarisch: true, vegan: false,
+    zutaten: [ing('magerquark', 150), ing('ei', 55, 1, 'Stück'), ing('haferflocken', 30)],
+    zubereitung: ['Magerquark, Ei und Haferflocken zu einem Teig verrühren.', 'Teig in einer beschichteten Pfanne zu einem Fladen ausbacken.', 'Von beiden Seiten goldbraun braten.'] },
+  { id: 'rec_hackfleisch_gemuesepfanne', name: 'Hackfleisch-Gemüsepfanne', kategorie: 'Abend', zubereitungszeit: 25, schwierigkeit: 'mittel', vegetarisch: false, vegan: false,
+    zutaten: [ing('rinderhack', 150), ing('zucchini', 100), ing('paprika', 80), ing('tomate', 80), ing('zwiebel', 40)],
+    zubereitung: ['Zwiebel andünsten, Hackfleisch dazugeben und krümelig anbraten.', 'Zucchini und Paprika hinzufügen und mitbraten.', 'Tomaten zum Schluss unterrühren und kurz köcheln lassen.'] },
+  { id: 'rec_gefuellte_paprika', name: 'Gefüllte Paprika mit Hackfleisch und Reis', kategorie: 'Abend', zubereitungszeit: 35, schwierigkeit: 'mittel', vegetarisch: false, vegan: false,
+    zutaten: [ing('paprika', 150, 1, 'Stück'), ing('rinderhack', 120), ing('reis_gekocht', 100), ing('gouda', 20)],
+    zubereitung: ['Paprika halbieren und entkernen.', 'Hackfleisch anbraten und mit Reis vermengen, würzen.', 'Paprikahälften füllen, mit Käse bestreuen und im Ofen bei 200°C 20 Minuten überbacken.'] },
+  { id: 'rec_shakshuka', name: 'Shakshuka', kategorie: 'Abend', zubereitungszeit: 20, schwierigkeit: 'mittel', vegetarisch: true, vegan: false,
+    zutaten: [ing('ei', 110, 2, 'Stück'), ing('tomate', 200), ing('paprika', 80), ing('zwiebel', 40), ing('feta', 30)],
+    zubereitung: ['Zwiebel und Paprika andünsten, Tomaten dazugeben und zu einer Sauce einkochen.', 'Mit Paprikapulver und Kreuzkümmel würzen.', 'Mulden in die Sauce drücken, Eier hineingeben und stocken lassen.', 'Mit Feta bestreuen.'] },
+  { id: 'rec_kabeljau_ofengemuese', name: 'Kabeljau mit Ofengemüse', kategorie: 'Abend', zubereitungszeit: 30, schwierigkeit: 'mittel', vegetarisch: false, vegan: false,
+    zutaten: [ing('kabeljau', 150), ing('zucchini', 100), ing('paprika', 80), ing('olivenoel', 10)],
+    zubereitung: ['Zucchini und Paprika mit Olivenöl vermengen und im Ofen bei 200°C 15 Minuten rösten.', 'Kabeljau würzen und dazulegen.', 'Weitere 12-15 Minuten fertig garen.'] },
+  { id: 'rec_tofu_gemuesepfanne', name: 'Tofu-Gemüsepfanne', kategorie: 'Abend', zubereitungszeit: 20, schwierigkeit: 'mittel', vegetarisch: true, vegan: true,
+    zutaten: [ing('tofu', 150), ing('brokkoli', 100), ing('paprika', 80), ing('sojasauce', 10), ing('reis_gekocht', 100)],
+    zubereitung: ['Tofu würfeln und knusprig anbraten.', 'Brokkoli und Paprika dazugeben und mitbraten.', 'Mit Sojasauce ablöschen und mit Reis servieren.'] },
+  { id: 'rec_haehnchen_curry_kokos', name: 'Hähnchen-Curry mit Kokosmilch', kategorie: 'Abend', zubereitungszeit: 30, schwierigkeit: 'mittel', vegetarisch: false, vegan: false,
+    zutaten: [ing('haehnchenbrust', 150), ing('kokosmilch', 100), ing('brokkoli', 100), ing('reis_gekocht', 150)],
+    zubereitung: ['Hähnchenbrust würfeln und anbraten.', 'Currypaste kurz mitrösten, Kokosmilch angießen.', 'Brokkoli dazugeben und köcheln, bis alles gar ist.', 'Mit Reis servieren.'] },
+  { id: 'rec_putenbrust_gruene_bohnen', name: 'Putenbrust mit grünen Bohnen', kategorie: 'Abend', zubereitungszeit: 25, schwierigkeit: 'leicht', vegetarisch: false, vegan: false,
+    zutaten: [ing('putenbrust', 150), ing('gruene_bohnen', 150), ing('kartoffeln', 150)],
+    zubereitung: ['Kartoffeln schälen, würfeln und kochen.', 'Putenbrust würzen und braten.', 'Grüne Bohnen dämpfen und alles zusammen servieren.'] },
+  { id: 'rec_rindergeschnetzeltes_champignons', name: 'Rindergeschnetzeltes mit Champignons', kategorie: 'Abend', zubereitungszeit: 25, schwierigkeit: 'mittel', vegetarisch: false, vegan: false,
+    zutaten: [ing('rinderfilet', 150), ing('champignons', 100), ing('zwiebel', 40), ing('reis_gekocht', 150)],
+    zubereitung: ['Rinderfilet in Streifen schneiden und scharf anbraten.', 'Zwiebel und Champignons dazugeben und mitbraten.', 'Mit Reis servieren.'] },
+  { id: 'rec_lachs_suesskartoffelpueree', name: 'Gebackener Lachs mit Süßkartoffelpüree', kategorie: 'Abend', zubereitungszeit: 30, schwierigkeit: 'mittel', vegetarisch: false, vegan: false,
+    zutaten: [ing('lachs', 150), ing('suesskartoffel', 200), ing('spinat', 60)],
+    zubereitung: ['Süßkartoffel weich kochen und zu Püree stampfen.', 'Lachs im Ofen bei 200°C ca. 15 Minuten backen.', 'Spinat kurz andünsten und alles zusammen anrichten.'] },
+  { id: 'rec_linsen_bolognese_zucchini', name: 'Linsen-Bolognese mit Zucchininudeln', kategorie: 'Abend', zubereitungszeit: 25, schwierigkeit: 'mittel', vegetarisch: true, vegan: true,
+    zutaten: [ing('linsen_gekocht', 200), ing('zucchini', 200), ing('tomate', 100), ing('zwiebel', 30)],
+    zubereitung: ['Zucchini mit dem Spiralschneider zu Nudeln verarbeiten.', 'Zwiebel andünsten, Tomaten und Linsen dazugeben und zu einer Sauce einkochen.', 'Zucchininudeln kurz mitschwenken und servieren.'] },
+
+  // ---------- SNACKS (6) ----------
+  { id: 'rec_skyr_bowl_beeren', name: 'Skyr-Bowl mit Beeren', kategorie: 'Snacks', zubereitungszeit: 3, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('skyr', 200), ing('heidelbeeren', 60), ing('honig', 5)],
+    zubereitung: ['Skyr in eine Schale füllen.', 'Mit Heidelbeeren toppen und mit Honig beträufeln.'] },
+  { id: 'rec_reiswaffeln_huettenkaese', name: 'Reiswaffeln mit Hüttenkäse', kategorie: 'Snacks', zubereitungszeit: 3, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('reiswaffeln', 20, 2, 'Stück'), ing('huettenkaese', 100), ing('tomate', 40)],
+    zubereitung: ['Hüttenkäse auf den Reiswaffeln verteilen.', 'Mit Tomatenscheiben belegen.'] },
+  { id: 'rec_proteinshake_banane', name: 'Proteinshake mit Banane', kategorie: 'Snacks', zubereitungszeit: 3, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('proteinpulver', 30), ing('milch_15', 250), ing('banane', 100)],
+    zubereitung: ['Alle Zutaten in den Mixer geben.', 'Cremig pürieren und sofort trinken.'] },
+  { id: 'rec_edamame_salz', name: 'Edamame mit Meersalz', kategorie: 'Snacks', zubereitungszeit: 8, schwierigkeit: 'leicht', vegetarisch: true, vegan: true,
+    zutaten: [ing('edamame', 150)],
+    zubereitung: ['Edamame in kochendem Salzwasser ca. 5 Minuten garen.', 'Abgießen und mit grobem Meersalz bestreuen.'] },
+  { id: 'rec_apfel_erdnussbutter', name: 'Apfel mit Erdnussbutter', kategorie: 'Snacks', zubereitungszeit: 2, schwierigkeit: 'leicht', vegetarisch: true, vegan: true,
+    zutaten: [ing('apfel', 150), ing('erdnussbutter', 20)],
+    zubereitung: ['Apfel in Spalten schneiden.', 'Mit Erdnussbutter servieren oder bestreichen.'] },
+  { id: 'rec_huettenkaese_ananas', name: 'Hüttenkäse mit Ananas', kategorie: 'Snacks', zubereitungszeit: 3, schwierigkeit: 'leicht', vegetarisch: true, vegan: false,
+    zutaten: [ing('huettenkaese', 150), ing('ananas', 80)],
+    zubereitung: ['Hüttenkäse in eine Schale geben.', 'Ananasstücke daraufgeben.'] },
+];
+
+function buildRecipe(raw) {
+  const zutaten = raw.zutaten.map((z) => {
+    const food = FOOD_DB.find((f) => f.id === z.foodId);
+    const factor = z.grams / 100;
+    return {
+      foodId: z.foodId,
+      name: food ? food.name : z.foodId,
+      menge: z.menge,
+      einheit: z.einheit,
+      grams: z.grams,
+      kcal: Math.round(food.kcal * factor * 10) / 10,
+      protein: Math.round(food.protein * factor * 10) / 10,
+      kh: Math.round(food.carbs * factor * 10) / 10,
+      fett: Math.round(food.fat * factor * 10) / 10,
+    };
+  });
+  const totals = zutaten.reduce(
+    (acc, z) => {
+      acc.kcal += z.kcal;
+      acc.protein += z.protein;
+      acc.kh += z.kh;
+      acc.fett += z.fett;
+      return acc;
+    },
+    { kcal: 0, protein: 0, kh: 0, fett: 0 }
+  );
+  const gesamtNaehrwerte = {
+    kcal: Math.round(totals.kcal),
+    protein: Math.round(totals.protein * 10) / 10,
+    kh: Math.round(totals.kh * 10) / 10,
+    fett: Math.round(totals.fett * 10) / 10,
+  };
+  const tags = [];
+  if (raw.vegetarisch) tags.push('vegetarisch');
+  if (raw.vegan) tags.push('vegan');
+  if (gesamtNaehrwerte.protein >= 25) tags.push('proteinreich');
+  if (gesamtNaehrwerte.kcal <= 400) tags.push('low-cal');
+  if (raw.zubereitungszeit <= 15) tags.push('schnell');
+
+  return {
+    id: raw.id,
+    name: raw.name,
+    kategorie: raw.kategorie,
+    zubereitungszeit: raw.zubereitungszeit,
+    schwierigkeit: raw.schwierigkeit,
+    tags,
+    portionen: 1,
+    zutaten,
+    gesamtNaehrwerte,
+    zubereitung: raw.zubereitung,
+    custom: false,
+  };
+}
+
+const RECIPES = RECIPES_RAW.map(buildRecipe);
+
 if (typeof module !== 'undefined') {
-  module.exports = { FOOD_DB, EXERCISES, MUSCLE_GROUPS, WORKOUT_PLANS };
+  module.exports = { FOOD_DB, EXERCISES, MUSCLE_GROUPS, WORKOUT_PLANS, RECIPES, buildRecipe };
 }

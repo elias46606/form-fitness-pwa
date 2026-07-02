@@ -843,6 +843,123 @@ input:focus, select:focus, textarea:focus {
 .modal-title { font-size: 20px; font-weight: 800; }
 
 /* ==========================================================================
+   Rezepte
+   ========================================================================== */
+
+.recipe-card {
+  border-bottom: 1px solid var(--line-soft);
+  padding: 16px 0;
+}
+
+.recipe-card-name {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 4px;
+}
+
+.recipe-card-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.recipe-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.recipe-card-tags .chip {
+  padding: 6px 10px;
+  min-height: auto;
+  font-size: 10px;
+}
+
+.recipe-fav-star {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--ink);
+  min-width: 32px;
+  min-height: 32px;
+  flex-shrink: 0;
+}
+
+#recipe-overlay {
+  background: var(--bg);
+  padding: calc(16px + var(--safe-top)) 20px calc(24px + var(--safe-bottom));
+}
+
+.recipe-overlay-inner { max-width: 480px; margin: 0 auto; }
+
+.recipe-overlay-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.recipe-overlay-top .btn-close { font-size: 20px; }
+
+.portion-selector {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 20px;
+}
+
+.portion-selector .chip { flex: 1; text-align: center; justify-content: center; display: flex; }
+
+.ingredient-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.ingredient-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  min-height: auto;
+  accent-color: var(--ink);
+  flex-shrink: 0;
+}
+
+.ingredient-row-name { flex: 1; font-size: 14px; }
+.ingredient-row.excluded .ingredient-row-name { text-decoration: line-through; color: var(--ink-soft); }
+.ingredient-row-amount { font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); text-align: right; }
+
+.prep-step {
+  display: flex;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.prep-step-num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  flex-shrink: 0;
+}
+
+.prep-step-text { font-size: 14px; line-height: 1.5; }
+
+.suggestion-card {
+  border: 1px solid var(--line-soft);
+  padding: 12px 14px;
+  margin-top: 10px;
+}
+
+.suggestion-card-name { font-weight: 700; font-size: 14px; }
+.suggestion-card-meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-soft); margin-top: 3px; }
+
+/* ==========================================================================
    Barcode-Scanner
    ========================================================================== */
 
