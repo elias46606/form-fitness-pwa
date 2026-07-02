@@ -1206,6 +1206,236 @@ input:focus, select:focus, textarea:focus {
 #rest-options { justify-content: center; margin-bottom: 24px; }
 
 /* ==========================================================================
+   Progressive Overload
+   ========================================================================== */
+
+.last-performance {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.suggestion-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.suggestion-swap {
+  display: inline-block;
+  margin-left: 8px;
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+}
+
+.workout-summary-inner { padding-top: 20px; }
+
+.summary-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 14px;
+}
+
+.summary-stat-row .val { font-family: var(--font-mono); font-weight: 700; }
+.summary-stat-row .val.positive { color: var(--accent); }
+
+.pr-highlight {
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  padding: 10px 14px;
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   HIIT-Intervall-Timer
+   ========================================================================== */
+
+#interval-timer {
+  background: #000000;
+  color: var(--white);
+  padding: calc(16px + var(--safe-top)) 20px calc(24px + var(--safe-bottom));
+  transition: background-color 0.15s ease, color 0.15s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+#interval-timer.phase-work { background: var(--ink); color: var(--white); }
+#interval-timer.phase-rest { background: var(--white); color: var(--ink); }
+#interval-timer.phase-prep { background: #000000; color: var(--white); }
+
+.interval-inner {
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.interval-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.interval-top .section-label, .interval-top .btn-close { color: inherit; margin-bottom: 0; }
+
+.interval-progress-track {
+  height: 2px;
+  background: currentColor;
+  opacity: 0.25;
+  margin: 14px 0 0;
+}
+
+.interval-progress-fill {
+  height: 100%;
+  background: currentColor;
+  opacity: 1;
+  width: 0%;
+  transition: width 0.2s linear;
+}
+
+.interval-phase-label {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-align: center;
+  text-transform: uppercase;
+  margin-top: auto;
+}
+
+.interval-countdown {
+  font-size: 30vw;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  margin: 8px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.interval-exercise-current {
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.interval-exercise-next {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  opacity: 0.7;
+  margin-top: 8px;
+  margin-bottom: auto;
+}
+
+.interval-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.interval-actions .btn {
+  flex: 1;
+  border-color: currentColor;
+  color: inherit;
+  background: transparent;
+}
+
+/* ==========================================================================
+   Wochen-Review
+   ========================================================================== */
+
+.review-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  margin-top: 12px;
+  cursor: pointer;
+}
+
+.review-banner.hidden { display: none; }
+.review-banner .btn-close { color: var(--accent); min-width: 32px; min-height: 32px; font-size: 12px; }
+
+.week-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.week-row .week-range { font-family: var(--font-mono); font-size: 11px; font-weight: 400; color: var(--ink-soft); }
+
+.review-stat-line {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  margin: 8px 0 20px;
+}
+
+.review-section-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 22px 0 10px;
+}
+
+.review-section-title:first-of-type { margin-top: 8px; }
+
+.review-fact-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 14px;
+}
+
+.review-fazit {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ink);
+}
+
+/* ==========================================================================
    Progress / charts
    ========================================================================== */
 

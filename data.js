@@ -165,6 +165,10 @@ const EXERCISES = [
     desc: 'Hände enger als schulterbreit positionieren, Ellbogen eng am Körper führen. Fordert Trizeps und Brust gleichermaßen.' },
   { id: 'plyo_liegestuetze', name: 'Liegestütze mit Klatschen', group: 'Brust', level: 'Fortgeschritten', equipment: 'Körpergewicht',
     desc: 'Explosiv aus der Liegestütz-Position abdrücken, in der Luft in die Hände klatschen und kontrolliert landen. Baut Kraft und Power auf.' },
+  { id: 'liegestuetze_erhoeht', name: 'Erhöhte Liegestütze (Füße erhöht)', group: 'Brust', level: 'Fortgeschritten', equipment: 'Körpergewicht',
+    desc: 'Füße auf einer erhöhten Fläche wie einer Bank ablegen und die Liegestütze ausführen. Erhöht durch die Gewichtsverlagerung die Intensität deutlich.' },
+  { id: 'archer_liegestuetze', name: 'Archer-Liegestütze', group: 'Brust', level: 'Fortgeschritten', equipment: 'Körpergewicht',
+    desc: 'Breiter Stand der Hände, Gewicht beim Absenken einseitig auf einen Arm verlagern während der andere Arm gestreckt bleibt. Sehr anspruchsvolle einseitige Variante.' },
   { id: 'brustpresse_kurzhantel', name: 'Brustpresse mit Kurzhanteln', group: 'Brust', level: 'Mittel', equipment: 'Kurzhanteln',
     desc: 'Rückenlage, Kurzhanteln über der Brust nach oben drücken, Ellbogen kontrolliert absenken. Gleichmäßige, ruhige Bewegung.' },
   { id: 'fliegende_kurzhantel', name: 'Fliegende mit Kurzhanteln', group: 'Brust', level: 'Mittel', equipment: 'Kurzhanteln',
@@ -351,24 +355,15 @@ const WORKOUT_PLANS = [
     level: 'Mittel',
     daysPerWeek: 3,
     days: [
-      { day: 'Tag 1', label: 'HIIT A', exercises: [
-        { exerciseId: 'jumping_jacks', sets: 4, reps: '40s' },
-        { exerciseId: 'mountain_climbers', sets: 4, reps: '40s' },
-        { exerciseId: 'high_knees', sets: 4, reps: '40s' },
-        { exerciseId: 'plank', sets: 4, reps: '40s' },
-      ]},
-      { day: 'Tag 2', label: 'HIIT B', exercises: [
-        { exerciseId: 'burpees', sets: 4, reps: '30s' },
-        { exerciseId: 'skaters', sets: 4, reps: '40s' },
-        { exerciseId: 'bicycle_crunches', sets: 4, reps: '40s' },
-        { exerciseId: 'plank_updown', sets: 4, reps: '30s' },
-      ]},
-      { day: 'Tag 3', label: 'HIIT C', exercises: [
-        { exerciseId: 'fast_mountain_climbers', sets: 4, reps: '40s' },
-        { exerciseId: 'jump_squats', sets: 4, reps: '30s' },
-        { exerciseId: 'russian_twists', sets: 4, reps: '40s' },
-        { exerciseId: 'hollow_body_hold', sets: 4, reps: '20s' },
-      ]},
+      { day: 'Tag 1', label: 'HIIT A', type: 'intervall', exercises: [],
+        intervall: { arbeitszeit: 40, pausezeit: 20, runden: 8, vorbereitungszeit: 10,
+          uebungen: ['jumping_jacks', 'mountain_climbers', 'high_knees', 'plank'] } },
+      { day: 'Tag 2', label: 'HIIT B', type: 'intervall', exercises: [],
+        intervall: { arbeitszeit: 40, pausezeit: 20, runden: 8, vorbereitungszeit: 10,
+          uebungen: ['burpees', 'skaters', 'bicycle_crunches', 'plank_updown'] } },
+      { day: 'Tag 3', label: 'HIIT C', type: 'intervall', exercises: [],
+        intervall: { arbeitszeit: 40, pausezeit: 20, runden: 8, vorbereitungszeit: 10,
+          uebungen: ['fast_mountain_climbers', 'jump_squats', 'russian_twists', 'hollow_body_hold'] } },
     ],
   },
   {
@@ -423,6 +418,21 @@ const WORKOUT_PLANS = [
     ],
   },
 ];
+
+/* Progressionsketten für Körpergewichtsübungen: aktuelle Übung -> nächste Stufe.
+   Vorschlag greift, wenn 3 Sätze mit je 15+ Wdh erreicht wurden. */
+const BODYWEIGHT_PROGRESSIONS = {
+  knie_liegestuetze: 'liegestuetze',
+  liegestuetze: 'liegestuetze_erhoeht',
+  liegestuetze_erhoeht: 'archer_liegestuetze',
+  kniebeugen: 'ausfallschritte',
+  ausfallschritte: 'bulgarian_split_squat',
+  bulgarian_split_squat: 'jump_squats',
+  plank: 'plank_updown',
+  plank_updown: 'hollow_body_hold',
+  crunches: 'bicycle_crunches',
+  bicycle_crunches: 'beinheben',
+};
 
 /* ==========================================================================
    Rezepte — Zutaten referenzieren FOOD_DB per foodId, damit Nährwerte
@@ -620,5 +630,5 @@ function buildRecipe(raw) {
 const RECIPES = RECIPES_RAW.map(buildRecipe);
 
 if (typeof module !== 'undefined') {
-  module.exports = { FOOD_DB, EXERCISES, MUSCLE_GROUPS, WORKOUT_PLANS, RECIPES, buildRecipe };
+  module.exports = { FOOD_DB, EXERCISES, MUSCLE_GROUPS, WORKOUT_PLANS, BODYWEIGHT_PROGRESSIONS, RECIPES, buildRecipe };
 }

@@ -84,6 +84,7 @@
     scannedProducts: 'form_scanned_products',
     customRecipes: 'form_custom_recipes',
     recipeFavorites: 'form_recipe_favorites',
+    dismissedReviewBanner: 'form_dismissed_review_banner',
   };
 
   const ALL_KEYS = Object.values(K);
@@ -280,8 +281,8 @@
   }
 
   function switchTrainingSubtab(tab) {
-    document.querySelectorAll('.subtab').forEach((s) => s.classList.toggle('active', s.dataset.subtab === tab));
-    document.querySelectorAll('.training-panel').forEach((p) => p.classList.toggle('hidden', p.id !== 'training-' + tab));
+    document.querySelectorAll('#training-subtabs .subtab').forEach((s) => s.classList.toggle('active', s.dataset.subtab === tab));
+    document.querySelectorAll('#view-training .training-panel').forEach((p) => p.classList.toggle('hidden', p.id !== 'training-' + tab));
     if (tab === 'plaene') renderTrainingPlaene();
     if (tab === 'uebungen') renderExerciseBrowser();
     if (tab === 'verlauf') renderWorkoutHistory();
@@ -290,7 +291,7 @@
   function renderView(view) {
     if (view === 'heute') renderHeute();
     if (view === 'kalorien') renderKalorien();
-    if (view === 'training') switchTrainingSubtab(document.querySelector('.subtab.active').dataset.subtab);
+    if (view === 'training') switchTrainingSubtab(document.querySelector('#training-subtabs .subtab.active').dataset.subtab);
     if (view === 'fortschritt') renderFortschritt();
     if (view === 'profil') renderProfil();
   }
@@ -362,13 +363,17 @@
     document.getElementById('heute-date').innerHTML =
       `${WEEKDAY_NAMES[now.getDay()]}<br><span class="fat">${now.getDate()}. ${MONTH_NAMES[now.getMonth()]}</span>`;
 
+    maybeShowReviewBanner();
+
     const streak = computeStreak();
     document.getElementById('streak-bar').textContent = `${streak} ${streak === 1 ? 'TAG' : 'TAGE'} IN FOLGE`;
 
     const eaten = day.calories.reduce((s, i) => s + i.kcal, 0);
     const stepsBurn = round((day.steps || 0) * 0.04);
-    const workoutBurn = hasWorkoutToday() ? 250 : 0;
-    const burned = stepsBurn + workoutBurn;
+    const todaysHistory = loadJSON(K.history, []).filter((h) => h.date === todayKey());
+    const strengthBonus = todaysHistory.some((h) => h.type !== 'intervall') ? 250 : 0;
+    const intervalBurn = todaysHistory.filter((h) => h.type === 'intervall').reduce((s, h) => s + (h.estimatedBurn || 0), 0);
+    const burned = stepsBurn + strengthBonus + intervalBurn;
     const goal = profile.calorieGoal;
     const remaining = goal + burned - eaten;
 
@@ -427,7 +432,7 @@
     } else {
       container.innerHTML = `
         <div class="plan-name">${twInfo.day.label}</div>
-        <div class="plan-subtitle">${twInfo.plan.name} · ${twInfo.day.exercises.length} Übungen</div>
+        <div class="plan-subtitle">${twInfo.plan.name} · ${formatDaySummaryLine(twInfo.day)}</div>
         <button class="btn btn-primary btn-full" id="btn-start-today-workout">Training starten</button>
       `;
       document.getElementById('btn-start-today-workout').addEventListener('click', () => {
@@ -436,9 +441,11 @@
     }
   }
 
-  function hasWorkoutToday() {
-    const history = loadJSON(K.history, []);
-    return history.some((h) => h.date === todayKey());
+  function formatDaySummaryLine(day) {
+    if (day.type === 'intervall' && day.intervall) {
+      return `${day.intervall.runden} RUNDEN × ${day.intervall.arbeitszeit}S ARBEIT / ${day.intervall.pausezeit}S PAUSE`;
+    }
+    return `${day.exercises.length} Übungen`;
   }
 
   function renderWaterTracker(day) {
@@ -1732,7 +1739,9 @@
               return `
               <div class="day-block">
                 <div class="day-block-title">${wdLabel} · ${d.label}${isToday ? ' · HEUTE' : ''}</div>
-                ${d.exercises.map((ex) => `<div class="day-ex-row"><span>${getExerciseById(ex.exerciseId)?.name || ex.exerciseId}</span><span class="reps">${ex.sets}×${ex.reps}</span></div>`).join('')}
+                ${d.type === 'intervall'
+                  ? `<div class="day-ex-row"><span>Intervall</span><span class="reps">${formatDaySummaryLine(d)}</span></div>`
+                  : d.exercises.map((ex) => `<div class="day-ex-row"><span>${getExerciseById(ex.exerciseId)?.name || ex.exerciseId}</span><span class="reps">${ex.sets}×${ex.reps}</span></div>`).join('')}
                 <button class="btn btn-ghost btn-full btn-small" data-start-day="${i}">Training starten</button>
               </div>
             `;
@@ -1787,7 +1796,9 @@
           return `
           <div class="day-block">
             <div class="day-block-title">${d.label}</div>
-            ${d.exercises.map((ex) => `<div class="day-ex-row"><span>${getExerciseById(ex.exerciseId)?.name || ex.exerciseId}</span><span class="reps">${ex.sets}×${ex.reps}</span></div>`).join('')}
+            ${d.type === 'intervall'
+              ? `<div class="day-ex-row"><span>Intervall</span><span class="reps">${formatDaySummaryLine(d)}</span></div>`
+              : d.exercises.map((ex) => `<div class="day-ex-row"><span>${getExerciseById(ex.exerciseId)?.name || ex.exerciseId}</span><span class="reps">${ex.sets}×${ex.reps}</span></div>`).join('')}
             <div class="field-label">Wochentag</div>
             <select data-day-idx="${i}" class="plan-weekday-select">
               <option value="">Kein Tag</option>
@@ -1852,7 +1863,13 @@
     });
 
     body.querySelector('#pb-add-day').addEventListener('click', () => {
-      planBuilder.days.push({ weekday: '', label: `Tag ${planBuilder.days.length + 1}`, exercises: [] });
+      planBuilder.days.push({
+        weekday: '',
+        label: `Tag ${planBuilder.days.length + 1}`,
+        type: 'kraft',
+        exercises: [],
+        intervall: { arbeitszeit: 40, pausezeit: 20, runden: 8, vorbereitungszeit: 10, uebungen: [] },
+      });
       renderPlanBuilderDays(body);
     });
 
@@ -1861,7 +1878,10 @@
         showToast('Bitte einen Namen für den Plan angeben.');
         return;
       }
-      if (planBuilder.days.length === 0 || planBuilder.days.some((d) => d.exercises.length === 0)) {
+      const invalid = planBuilder.days.some((d) =>
+        d.type === 'intervall' ? d.intervall.uebungen.length === 0 : d.exercises.length === 0
+      );
+      if (planBuilder.days.length === 0 || invalid) {
         showToast('Jeder Tag braucht mindestens eine Übung.');
         return;
       }
@@ -1876,7 +1896,11 @@
         subtitle: 'Eigener Plan',
         level: planBuilder.level,
         daysPerWeek: planBuilder.days.length,
-        days: planBuilder.days.map((d) => ({ day: d.label, label: d.label, exercises: d.exercises })),
+        days: planBuilder.days.map((d) =>
+          d.type === 'intervall'
+            ? { day: d.label, label: d.label, type: 'intervall', exercises: [], intervall: d.intervall }
+            : { day: d.label, label: d.label, exercises: d.exercises }
+        ),
       };
       const customPlans = loadJSON(K.customPlans, []);
       customPlans.push(plan);
@@ -1904,25 +1928,12 @@
           <option value="">Kein Tag</option>
           ${WEEKDAY_NAMES.map((name, wdIdx) => `<option value="${wdIdx}" ${String(wdIdx) === String(d.weekday) ? 'selected' : ''}>${name}</option>`).join('')}
         </select>
-        <div class="field-label">Übungen</div>
-        ${d.exercises
-          .map(
-            (ex, exIdx) => `
-          <div class="day-ex-row">
-            <span>${getExerciseById(ex.exerciseId)?.name || ex.exerciseId} — ${ex.sets}×${ex.reps}</span>
-            <button class="meal-item-del" data-remove-ex="${dIdx}:${exIdx}">✕</button>
-          </div>
-        `
-          )
-          .join('')}
-        <div class="steps-row" style="margin-top:8px;">
-          <select class="pb-ex-select" data-idx="${dIdx}" style="flex:2;">
-            ${EXERCISES.map((e) => `<option value="${e.id}">${e.name}</option>`).join('')}
-          </select>
-          <input type="text" class="pb-ex-sets" data-idx="${dIdx}" placeholder="Sätze" value="3" style="flex:1;">
-          <input type="text" class="pb-ex-reps" data-idx="${dIdx}" placeholder="Wdh" value="12" style="flex:1;">
+        <div class="field-label">Typ</div>
+        <div class="chip-group pb-day-type" data-idx="${dIdx}">
+          <button type="button" class="chip ${d.type === 'kraft' ? 'active' : ''}" data-value="kraft">Kraft</button>
+          <button type="button" class="chip ${d.type === 'intervall' ? 'active' : ''}" data-value="intervall">Intervall</button>
         </div>
-        <button class="btn btn-ghost btn-full btn-small" data-add-ex="${dIdx}">+ Übung hinzufügen</button>
+        ${d.type === 'intervall' ? renderIntervallDayFields(d, dIdx) : renderKraftDayFields(d, dIdx)}
         <button class="btn btn-ghost btn-full btn-small" data-remove-day="${dIdx}" style="margin-top:6px;">Tag entfernen</button>
       </div>
     `
@@ -1937,6 +1948,14 @@
     el.querySelectorAll('.pb-day-weekday').forEach((sel) => {
       sel.addEventListener('change', (e) => {
         planBuilder.days[parseInt(e.target.dataset.idx, 10)].weekday = e.target.value;
+      });
+    });
+    el.querySelectorAll('.pb-day-type').forEach((group) => {
+      group.addEventListener('click', (e) => {
+        const btn = e.target.closest('.chip');
+        if (!btn) return;
+        planBuilder.days[parseInt(group.dataset.idx, 10)].type = btn.dataset.value;
+        renderPlanBuilderDays(body);
       });
     });
     el.querySelectorAll('[data-add-ex]').forEach((btn) => {
@@ -1960,12 +1979,101 @@
         renderPlanBuilderDays(body);
       });
     });
+    el.querySelectorAll('.pb-intervall-field').forEach((inp) => {
+      inp.addEventListener('input', (e) => {
+        const dIdx = parseInt(e.target.dataset.idx, 10);
+        const field = e.target.dataset.field;
+        planBuilder.days[dIdx].intervall[field] = parseInt(e.target.value, 10) || 0;
+      });
+    });
+    el.querySelectorAll('[data-add-interval-ex]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const dIdx = parseInt(btn.dataset.addIntervalEx, 10);
+        const select = el.querySelector(`.pb-interval-ex-select[data-idx="${dIdx}"]`);
+        planBuilder.days[dIdx].intervall.uebungen.push(select.value);
+        renderPlanBuilderDays(body);
+      });
+    });
+    el.querySelectorAll('[data-remove-interval-ex]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const [dIdx, exIdx] = btn.dataset.removeIntervalEx.split(':').map(Number);
+        planBuilder.days[dIdx].intervall.uebungen.splice(exIdx, 1);
+        renderPlanBuilderDays(body);
+      });
+    });
     el.querySelectorAll('[data-remove-day]').forEach((btn) => {
       btn.addEventListener('click', () => {
         planBuilder.days.splice(parseInt(btn.dataset.removeDay, 10), 1);
         renderPlanBuilderDays(body);
       });
     });
+  }
+
+  function renderKraftDayFields(d, dIdx) {
+    return `
+      <div class="field-label">Übungen</div>
+      ${d.exercises
+        .map(
+          (ex, exIdx) => `
+        <div class="day-ex-row">
+          <span>${getExerciseById(ex.exerciseId)?.name || ex.exerciseId} — ${ex.sets}×${ex.reps}</span>
+          <button class="meal-item-del" data-remove-ex="${dIdx}:${exIdx}">✕</button>
+        </div>
+      `
+        )
+        .join('')}
+      <div class="steps-row" style="margin-top:8px;">
+        <select class="pb-ex-select" data-idx="${dIdx}" style="flex:2;">
+          ${EXERCISES.map((e) => `<option value="${e.id}">${e.name}</option>`).join('')}
+        </select>
+        <input type="text" class="pb-ex-sets" data-idx="${dIdx}" placeholder="Sätze" value="3" style="flex:1;">
+        <input type="text" class="pb-ex-reps" data-idx="${dIdx}" placeholder="Wdh" value="12" style="flex:1;">
+      </div>
+      <button class="btn btn-ghost btn-full btn-small" data-add-ex="${dIdx}">+ Übung hinzufügen</button>
+    `;
+  }
+
+  function renderIntervallDayFields(d, dIdx) {
+    const cfg = d.intervall;
+    return `
+      <div class="steps-row">
+        <div style="flex:1;">
+          <div class="field-label">Arbeit (S)</div>
+          <input type="number" class="pb-intervall-field" data-idx="${dIdx}" data-field="arbeitszeit" value="${cfg.arbeitszeit}">
+        </div>
+        <div style="flex:1;">
+          <div class="field-label">Pause (S)</div>
+          <input type="number" class="pb-intervall-field" data-idx="${dIdx}" data-field="pausezeit" value="${cfg.pausezeit}">
+        </div>
+      </div>
+      <div class="steps-row">
+        <div style="flex:1;">
+          <div class="field-label">Runden</div>
+          <input type="number" class="pb-intervall-field" data-idx="${dIdx}" data-field="runden" value="${cfg.runden}">
+        </div>
+        <div style="flex:1;">
+          <div class="field-label">Vorbereitung (S)</div>
+          <input type="number" class="pb-intervall-field" data-idx="${dIdx}" data-field="vorbereitungszeit" value="${cfg.vorbereitungszeit}">
+        </div>
+      </div>
+      <div class="field-label">Übungsreihenfolge</div>
+      ${cfg.uebungen
+        .map(
+          (exId, exIdx) => `
+        <div class="day-ex-row">
+          <span>${exIdx + 1}. ${getExerciseById(exId)?.name || exId}</span>
+          <button class="meal-item-del" data-remove-interval-ex="${dIdx}:${exIdx}">✕</button>
+        </div>
+      `
+        )
+        .join('')}
+      <div class="steps-row" style="margin-top:8px;">
+        <select class="pb-interval-ex-select" data-idx="${dIdx}" style="flex:1;">
+          ${EXERCISES.filter((e) => e.group === 'Cardio' || e.group === 'Core').map((e) => `<option value="${e.id}">${e.name}</option>`).join('')}
+        </select>
+      </div>
+      <button class="btn btn-ghost btn-full btn-small" data-add-interval-ex="${dIdx}">+ Übung hinzufügen</button>
+    `;
   }
 
   /* ==========================================================================
@@ -1987,7 +2095,7 @@
           <div class="history-date">${h.date}</div>
           <div class="history-plan">${h.planName} · ${h.dayLabel}</div>
         </div>
-        <div class="history-volume">${round(h.volume)} KG<br>VOLUMEN</div>
+        <div class="history-volume">${h.type === 'intervall' ? `${h.estimatedBurn || 0} KCAL<br>VERBRANNT` : `${round(h.volume)} KG<br>VOLUMEN`}</div>
       </div>
     `
       )
@@ -2002,23 +2110,126 @@
   let restTimer = null;
   let restSeconds = 90;
 
+  /* ---------- Progressive Overload ---------- */
+
+  function getExerciseHistoryEntries(exerciseId, beforeDate) {
+    const history = loadJSON(K.history, []);
+    return history
+      .filter((h) => h.exercises.some((e) => e.exerciseId === exerciseId) && (!beforeDate || h.date < beforeDate))
+      .sort((a, b) => b.date.localeCompare(a.date));
+  }
+
+  function getLastExercisePerformance(exerciseId) {
+    const entries = getExerciseHistoryEntries(exerciseId);
+    if (entries.length === 0) return null;
+    const exData = entries[0].exercises.find((e) => e.exerciseId === exerciseId);
+    if (!exData || !exData.sets || exData.sets.length === 0) return null;
+    return { date: entries[0].date, sets: exData.sets, targetReps: exData.targetReps || null };
+  }
+
+  function parseRepRange(repsStr) {
+    if (!repsStr) return null;
+    const str = String(repsStr).trim();
+    if (/s$/i.test(str)) return null;
+    const range = str.match(/^(\d+)\s*-\s*(\d+)$/);
+    if (range) return { min: parseInt(range[1], 10), max: parseInt(range[2], 10) };
+    const n = parseInt(str, 10);
+    if (!isNaN(n)) return { min: n, max: n };
+    return null;
+  }
+
+  function formatLastPerformance(last) {
+    if (!last) return null;
+    const first = last.sets[0];
+    return `${last.sets.length}×${first.reps}${first.weight ? ' · ' + first.weight + 'KG' : ''}`;
+  }
+
+  function computeSuggestion(exerciseId, planTargetReps) {
+    const last = getLastExercisePerformance(exerciseId);
+    if (!last) return null;
+    const isBodyweight = (getExerciseById(exerciseId) || {}).equipment === 'Körpergewicht';
+    const first = last.sets[0];
+
+    if (isBodyweight && BODYWEIGHT_PROGRESSIONS[exerciseId] && last.sets.length >= 3 && last.sets.every((s) => s.reps >= 15)) {
+      const nextId = BODYWEIGHT_PROGRESSIONS[exerciseId];
+      const nextEx = getExerciseById(nextId);
+      const range = parseRepRange(planTargetReps);
+      return { type: 'progression', message: `Nächste Stufe: ${nextEx ? nextEx.name : nextId}`, nextExerciseId: nextId, suggestedReps: range ? range.min : 8, suggestedWeight: 0 };
+    }
+
+    const range = parseRepRange(last.targetReps || planTargetReps);
+    if (!range) {
+      return { type: 'repeat', message: 'Gleiche Werte wie letztes Mal', suggestedReps: first.reps, suggestedWeight: first.weight };
+    }
+
+    const allHitTarget = last.sets.every((s) => s.reps >= range.max);
+    if (allHitTarget) {
+      if (range.max > range.min) {
+        if (!isBodyweight) {
+          const lastWeight = first.weight || 0;
+          return { type: 'weight', message: `Gewicht +2,5KG · ${range.min} Wdh`, suggestedReps: range.min, suggestedWeight: lastWeight > 0 ? round10(lastWeight + 2.5) : 2.5 };
+        }
+        return { type: 'weight', message: `Schwerere Variante · ${range.min} Wdh`, suggestedReps: range.min, suggestedWeight: first.weight || 0 };
+      }
+      return { type: 'reps', message: '+1 Wdh pro Satz', suggestedReps: (first.reps || 0) + 1, suggestedWeight: first.weight || 0 };
+    }
+    return { type: 'repeat', message: 'Gleiche Werte wie letztes Mal', suggestedReps: first.reps, suggestedWeight: first.weight };
+  }
+
+  function getExercisePRBaseline(exerciseId, beforeDate) {
+    const entries = getExerciseHistoryEntries(exerciseId, beforeDate);
+    let maxWeight = 0;
+    const repsAtWeight = {};
+    entries.forEach((h) => {
+      h.exercises
+        .filter((e) => e.exerciseId === exerciseId)
+        .forEach((e) =>
+          e.sets.forEach((s) => {
+            if (s.weight > maxWeight) maxWeight = s.weight;
+            if (!repsAtWeight[s.weight] || s.reps > repsAtWeight[s.weight]) repsAtWeight[s.weight] = s.reps;
+          })
+        );
+    });
+    return { maxWeight, repsAtWeight, hasHistory: entries.length > 0 };
+  }
+
+  function isNewPR(set, baseline) {
+    if (!baseline.hasHistory) return false;
+    if (set.weight > baseline.maxWeight) return true;
+    const priorReps = baseline.repsAtWeight[set.weight] || 0;
+    return set.reps > priorReps;
+  }
+
+  /* ---------- Workout-Modus ---------- */
+
   function startWorkout(plan, day) {
+    if (day.type === 'intervall') {
+      startIntervalWorkout(plan, day);
+      return;
+    }
     workoutState = {
       planId: plan.id,
       planName: plan.name,
       dayLabel: day.label,
       exercises: day.exercises.map((ex) => {
         const setCount = ex.sets;
+        const suggestion = computeSuggestion(ex.exerciseId, ex.reps);
         return {
           exerciseId: ex.exerciseId,
           targetReps: ex.reps,
-          sets: Array.from({ length: setCount }, () => ({ reps: '', weight: '', done: false })),
+          suggestion,
+          sets: Array.from({ length: setCount }, () => ({
+            reps: suggestion ? String(suggestion.suggestedReps) : '',
+            weight: suggestion && suggestion.suggestedWeight ? String(suggestion.suggestedWeight) : '',
+            done: false,
+          })),
         };
       }),
       currentIndex: 0,
     };
     document.getElementById('workout-mode').classList.remove('hidden');
     document.getElementById('workout-rest').classList.add('hidden');
+    document.getElementById('workout-summary').classList.add('hidden');
     document.getElementById('workout-exercise-view').classList.remove('hidden');
     renderWorkoutExercise();
   }
@@ -2028,10 +2239,22 @@
     const exData = getExerciseById(ex.exerciseId);
     document.getElementById('workout-progress').textContent = `ÜBUNG ${workoutState.currentIndex + 1} / ${workoutState.exercises.length}`;
 
+    const last = getLastExercisePerformance(ex.exerciseId);
+    const lastLine = last ? `<div class="last-performance">LETZTES MAL: ${formatLastPerformance(last)}</div>` : '';
+    let suggestionLine = '';
+    if (ex.suggestion) {
+      const swapBtn = ex.suggestion.type === 'progression'
+        ? `<button class="suggestion-swap" id="wo-swap-exercise">Übernehmen</button>`
+        : '';
+      suggestionLine = `<div class="suggestion-label">→ VORSCHLAG: ${ex.suggestion.message}${swapBtn}</div>`;
+    }
+
     const view = document.getElementById('workout-exercise-view');
     view.innerHTML = `
       <div class="workout-ex-name">${exData ? exData.name : ex.exerciseId}</div>
       <div class="workout-ex-meta">${exData ? `${exData.group} · ${exData.level} · ${exData.equipment}` : ''} · ZIEL ${ex.targetReps} WDH</div>
+      ${lastLine}
+      ${suggestionLine}
       <div class="workout-ex-desc">${exData ? exData.desc : ''}</div>
       ${ex.sets
         .map(
@@ -2068,6 +2291,17 @@
         btn.classList.toggle('done', ex.sets[i].done);
       });
     });
+
+    const swapBtn = view.querySelector('#wo-swap-exercise');
+    if (swapBtn) {
+      swapBtn.addEventListener('click', () => {
+        const nextId = ex.suggestion.nextExerciseId;
+        ex.exerciseId = nextId;
+        ex.suggestion = null;
+        ex.sets = ex.sets.map(() => ({ reps: '', weight: '', done: false }));
+        renderWorkoutExercise();
+      });
+    }
 
     const prevBtn = view.querySelector('#wo-prev');
     if (prevBtn) prevBtn.addEventListener('click', () => {
@@ -2127,6 +2361,10 @@
       advanceToNextExercise();
     });
     document.getElementById('workout-close').addEventListener('click', () => {
+      if (!workoutState) {
+        document.getElementById('workout-mode').classList.add('hidden');
+        return;
+      }
       if (confirm('Training abbrechen? Der Fortschritt geht verloren.')) {
         clearInterval(restTimer);
         workoutState = null;
@@ -2136,35 +2374,331 @@
   }
 
   function finishWorkout() {
-    let volume = 0;
+    const prBaselines = {};
     workoutState.exercises.forEach((ex) => {
-      ex.sets.forEach((s) => {
-        const w = parseFloat(s.weight) || 0;
-        const r = parseFloat(s.reps) || 0;
-        volume += w * r;
-      });
+      if (!prBaselines[ex.exerciseId]) prBaselines[ex.exerciseId] = getExercisePRBaseline(ex.exerciseId);
     });
+
+    let volume = 0;
+    const newPRExerciseNames = [];
+    const finalExercises = workoutState.exercises.map((ex) => {
+      const sets = ex.sets
+        .filter((s) => s.reps !== '' || s.weight !== '')
+        .map((s) => ({ reps: parseFloat(s.reps) || 0, weight: parseFloat(s.weight) || 0 }));
+      let hasPR = false;
+      sets.forEach((s) => {
+        volume += s.weight * s.reps;
+        if (isNewPR(s, prBaselines[ex.exerciseId])) hasPR = true;
+      });
+      if (hasPR) {
+        const exData = getExerciseById(ex.exerciseId);
+        newPRExerciseNames.push(exData ? exData.name : ex.exerciseId);
+      }
+      return { exerciseId: ex.exerciseId, targetReps: ex.targetReps, sets };
+    });
+
+    const previousSession = loadJSON(K.history, [])
+      .filter((h) => h.planId === workoutState.planId && h.dayLabel === workoutState.dayLabel)
+      .sort((a, b) => b.date.localeCompare(a.date))[0];
+    const volumeChangePct = previousSession && previousSession.volume > 0
+      ? round(((volume - previousSession.volume) / previousSession.volume) * 100)
+      : null;
+
     const entry = {
       id: uid(),
       date: todayKey(),
       planId: workoutState.planId,
       planName: workoutState.planName,
       dayLabel: workoutState.dayLabel,
-      exercises: workoutState.exercises.map((ex) => ({
-        exerciseId: ex.exerciseId,
-        sets: ex.sets.filter((s) => s.reps !== '' || s.weight !== '').map((s) => ({ reps: parseFloat(s.reps) || 0, weight: parseFloat(s.weight) || 0 })),
-      })),
+      exercises: finalExercises,
       volume,
     };
     const history = loadJSON(K.history, []);
     history.push(entry);
     saveJSON(K.history, history);
 
+    renderWorkoutSummary(volume, volumeChangePct, newPRExerciseNames);
     workoutState = null;
-    document.getElementById('workout-mode').classList.add('hidden');
-    showToast('Training gespeichert. Gut gemacht.');
     renderHeute();
     if (document.querySelector('.subtab.active')?.dataset.subtab === 'verlauf') renderWorkoutHistory();
+  }
+
+  function renderWorkoutSummary(volume, volumeChangePct, newPRExerciseNames) {
+    document.getElementById('workout-exercise-view').classList.add('hidden');
+    document.getElementById('workout-rest').classList.add('hidden');
+    document.getElementById('workout-progress').textContent = 'ZUSAMMENFASSUNG';
+    const el = document.getElementById('workout-summary');
+    el.classList.remove('hidden');
+    el.innerHTML = `
+      <div class="workout-summary-inner">
+        <h1 class="headline" style="font-size:28px;">Training<br><span class="fat">abgeschlossen.</span></h1>
+        <div class="summary-stat-row"><span>Volumen</span><span class="val">${round(volume)} KG</span></div>
+        ${volumeChangePct !== null ? `<div class="summary-stat-row"><span>Vs. letztes Mal</span><span class="val ${volumeChangePct >= 0 ? 'positive' : ''}">${volumeChangePct >= 0 ? '+' : ''}${volumeChangePct}%</span></div>` : ''}
+        ${newPRExerciseNames.length > 0 ? `<div class="pr-highlight">${newPRExerciseNames.length} NEUE${newPRExerciseNames.length === 1 ? 'R' : ''} REKORD${newPRExerciseNames.length === 1 ? '' : 'E'}<br>${newPRExerciseNames.join(', ')}</div>` : ''}
+        <button class="btn btn-primary btn-full" id="workout-summary-close" style="margin-top:24px;">Fertig</button>
+      </div>
+    `;
+    el.querySelector('#workout-summary-close').addEventListener('click', () => {
+      document.getElementById('workout-mode').classList.add('hidden');
+      el.classList.add('hidden');
+      document.getElementById('workout-exercise-view').classList.remove('hidden');
+    });
+    showToast('Training gespeichert. Gut gemacht.');
+  }
+
+  /* ==========================================================================
+     HIIT-INTERVALL-TIMER
+     ========================================================================== */
+
+  const MET_HIIT = 8;
+  let intervalState = null;
+  let wakeLockObj = null;
+  let audioCtx = null;
+
+  function getAudioCtx() {
+    if (!audioCtx) {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        audioCtx = null;
+      }
+    }
+    return audioCtx;
+  }
+
+  function beep(freq, durationMs, volume) {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = freq;
+    gain.gain.value = volume || 0.2;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + durationMs / 1000);
+  }
+
+  async function requestWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    try {
+      wakeLockObj = await navigator.wakeLock.request('screen');
+    } catch (e) {
+      wakeLockObj = null;
+    }
+  }
+
+  function releaseWakeLock() {
+    if (wakeLockObj) {
+      wakeLockObj.release().catch(() => {});
+      wakeLockObj = null;
+    }
+  }
+
+  function onIntervalVisibilityChange() {
+    if (!intervalState) return;
+    if (document.visibilityState === 'visible') {
+      if (!intervalState.paused) requestWakeLock();
+      intervalTick();
+    }
+  }
+
+  function currentExerciseForRound(round) {
+    const list = intervalState.cfg.uebungen;
+    return list[(round - 1) % list.length];
+  }
+
+  function startIntervalWorkout(plan, day) {
+    const cfg = day.intervall;
+    intervalState = {
+      planId: plan.id,
+      planName: plan.name,
+      dayLabel: day.label,
+      cfg,
+      phase: 'prep',
+      round: 1,
+      phaseDurationSec: cfg.vorbereitungszeit,
+      phaseEndTime: Date.now() + cfg.vorbereitungszeit * 1000,
+      paused: false,
+      pausedRemainingMs: 0,
+      beeped: new Set(),
+      startedAt: Date.now(),
+    };
+    document.getElementById('interval-timer').classList.remove('hidden');
+    document.getElementById('interval-actions').innerHTML = `
+      <button class="btn btn-ghost" id="interval-pause">Pause</button>
+      <button class="btn btn-ghost" id="interval-cancel-btn">Abbrechen</button>
+    `;
+    document.getElementById('interval-pause').addEventListener('click', toggleIntervalPause);
+    document.getElementById('interval-cancel-btn').addEventListener('click', cancelIntervalWorkout);
+    document.addEventListener('visibilitychange', onIntervalVisibilityChange);
+    requestWakeLock();
+    intervalTick();
+    intervalState.tickHandle = setInterval(intervalTick, 200);
+  }
+
+  function toggleIntervalPause() {
+    if (!intervalState) return;
+    const btn = document.getElementById('interval-pause');
+    if (intervalState.paused) {
+      intervalState.phaseEndTime = Date.now() + intervalState.pausedRemainingMs;
+      intervalState.paused = false;
+      btn.textContent = 'Pause';
+      requestWakeLock();
+    } else {
+      intervalState.pausedRemainingMs = Math.max(0, intervalState.phaseEndTime - Date.now());
+      intervalState.paused = true;
+      btn.textContent = 'Weiter';
+    }
+  }
+
+  function cancelIntervalWorkout() {
+    if (!confirm('Intervall-Training abbrechen?')) return;
+    stopIntervalTimerResources();
+    document.getElementById('interval-timer').classList.add('hidden');
+    intervalState = null;
+  }
+
+  function stopIntervalTimerResources() {
+    if (intervalState && intervalState.tickHandle) clearInterval(intervalState.tickHandle);
+    document.removeEventListener('visibilitychange', onIntervalVisibilityChange);
+    releaseWakeLock();
+  }
+
+  function intervalTick() {
+    if (!intervalState || intervalState.paused) return;
+    let remainingMs = intervalState.phaseEndTime - Date.now();
+    while (remainingMs <= 0 && intervalState && intervalState.phase !== 'done') {
+      advanceIntervalPhase();
+      if (!intervalState) return;
+      remainingMs = intervalState.phaseEndTime - Date.now();
+    }
+    if (!intervalState || intervalState.phase === 'done') return;
+    const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+    updateIntervalDisplay(remainingSec);
+    handleIntervalBeeps(remainingSec);
+  }
+
+  function advanceIntervalPhase() {
+    const cfg = intervalState.cfg;
+    const prevEndTime = intervalState.phaseEndTime;
+    intervalState.beeped = new Set();
+    beep(440, 300, 0.25);
+    if (navigator.vibrate) navigator.vibrate(200);
+
+    if (intervalState.phase === 'prep') {
+      intervalState.phase = 'work';
+      intervalState.phaseDurationSec = cfg.arbeitszeit;
+    } else if (intervalState.phase === 'work') {
+      if (intervalState.round >= cfg.runden) {
+        intervalState.phase = 'done';
+        finishIntervalWorkout();
+        return;
+      }
+      intervalState.phase = 'rest';
+      intervalState.phaseDurationSec = cfg.pausezeit;
+    } else if (intervalState.phase === 'rest') {
+      intervalState.round++;
+      intervalState.phase = 'work';
+      intervalState.phaseDurationSec = cfg.arbeitszeit;
+    }
+    intervalState.phaseEndTime = prevEndTime + intervalState.phaseDurationSec * 1000;
+  }
+
+  function handleIntervalBeeps(remainingSec) {
+    if (remainingSec > 3 || remainingSec < 1) return;
+    const key = `${intervalState.phase}-${intervalState.round}-${remainingSec}`;
+    if (intervalState.beeped.has(key)) return;
+    intervalState.beeped.add(key);
+    beep(880, 100, 0.15);
+    if (navigator.vibrate) navigator.vibrate(40);
+  }
+
+  function updateIntervalDisplay(remainingSec) {
+    const el = document.getElementById('interval-timer');
+    el.classList.remove('phase-work', 'phase-rest', 'phase-prep');
+    el.classList.add('phase-' + intervalState.phase);
+
+    const phaseLabels = { prep: 'BEREIT', work: 'ARBEIT', rest: 'PAUSE' };
+    document.getElementById('interval-phase-label').textContent = phaseLabels[intervalState.phase] || '';
+    document.getElementById('interval-countdown').textContent = remainingSec;
+    document.getElementById('interval-round-label').textContent = `RUNDE ${intervalState.round}/${intervalState.cfg.runden}`;
+
+    const totalRounds = intervalState.cfg.runden;
+    const completedFraction = (intervalState.round - 1 + (intervalState.phase === 'rest' ? 0.5 : 0)) / totalRounds;
+    document.getElementById('interval-progress-fill').style.width = `${clamp(completedFraction * 100, 0, 100)}%`;
+
+    let currentLabel = '';
+    let nextExId = null;
+    if (intervalState.phase === 'prep') {
+      currentLabel = 'Gleich geht\'s los';
+      nextExId = currentExerciseForRound(1);
+    } else if (intervalState.phase === 'work') {
+      const currentEx = getExerciseById(currentExerciseForRound(intervalState.round));
+      currentLabel = currentEx ? currentEx.name : '';
+      nextExId = intervalState.round < totalRounds ? currentExerciseForRound(intervalState.round + 1) : null;
+    } else if (intervalState.phase === 'rest') {
+      currentLabel = '';
+      nextExId = currentExerciseForRound(intervalState.round + 1);
+    }
+    document.getElementById('interval-exercise-current').textContent = currentLabel;
+    const nextEx = nextExId ? getExerciseById(nextExId) : null;
+    document.getElementById('interval-exercise-next').textContent = nextEx ? `ALS NÄCHSTES: ${nextEx.name.toUpperCase()}` : '';
+  }
+
+  function finishIntervalWorkout() {
+    const cfg = intervalState.cfg;
+    const durationSec = cfg.vorbereitungszeit + cfg.runden * cfg.arbeitszeit + (cfg.runden - 1) * cfg.pausezeit;
+    const profile = getProfile();
+    const weightKg = profile ? profile.weight : 75;
+    const estimatedBurn = round(MET_HIIT * weightKg * (durationSec / 3600));
+
+    const entry = {
+      id: uid(),
+      date: todayKey(),
+      planId: intervalState.planId,
+      planName: intervalState.planName,
+      dayLabel: intervalState.dayLabel,
+      type: 'intervall',
+      exercises: [],
+      volume: 0,
+      estimatedBurn,
+      durationSec,
+    };
+    const history = loadJSON(K.history, []);
+    history.push(entry);
+    saveJSON(K.history, history);
+
+    stopIntervalTimerResources();
+    showIntervalCompletion(estimatedBurn);
+  }
+
+  function showIntervalCompletion(estimatedBurn) {
+    const el = document.getElementById('interval-timer');
+    el.classList.remove('phase-work', 'phase-rest', 'phase-prep');
+    document.getElementById('interval-phase-label').textContent = 'GESCHAFFT';
+    document.getElementById('interval-countdown').textContent = '✓';
+    document.getElementById('interval-progress-fill').style.width = '100%';
+    document.getElementById('interval-exercise-current').textContent = `≈ ${estimatedBurn} KCAL VERBRANNT`;
+    document.getElementById('interval-exercise-next').textContent = '';
+    document.getElementById('interval-actions').innerHTML = `<button class="btn btn-primary" id="interval-done" style="flex:1;">Fertig</button>`;
+    document.getElementById('interval-done').addEventListener('click', () => {
+      el.classList.add('hidden');
+      intervalState = null;
+      renderHeute();
+      if (document.querySelector('.subtab.active')?.dataset.subtab === 'verlauf') renderWorkoutHistory();
+    });
+  }
+
+  function initIntervalHandlers() {
+    document.getElementById('interval-close').addEventListener('click', () => {
+      if (!intervalState) {
+        document.getElementById('interval-timer').classList.add('hidden');
+        return;
+      }
+      cancelIntervalWorkout();
+    });
   }
 
   /* ==========================================================================
@@ -2177,6 +2711,7 @@
     renderTrainingCalendar();
     renderMeasurements();
     renderPersonalRecords();
+    renderWeekReviewList();
   }
 
   function initFortschrittHandlers() {
@@ -2402,6 +2937,243 @@
       `;
       })
       .join('');
+  }
+
+  /* ==========================================================================
+     WOCHEN-REVIEW
+     ========================================================================== */
+
+  function getISOWeekInfo(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+    return { year: d.getUTCFullYear(), week: weekNo };
+  }
+
+  function getMondayOfWeek(date) {
+    const d = new Date(date);
+    const day = d.getDay() || 7;
+    d.setDate(d.getDate() - day + 1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  function getWeekDateKeys(monday) {
+    return Array.from({ length: 7 }, (_, i) => dateKey(addDays(monday, i)));
+  }
+
+  function formatWeekRange(monday, sunday) {
+    const fmt = (d) => `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, '0')}.`;
+    return `${fmt(monday)} – ${fmt(sunday)}${sunday.getFullYear()}`;
+  }
+
+  function listCompletedWeeks(count) {
+    const thisMonday = getMondayOfWeek(new Date());
+    const weeks = [];
+    for (let i = 1; i <= count; i++) {
+      const monday = addDays(thisMonday, -7 * i);
+      const sunday = addDays(monday, 6);
+      const info = getISOWeekInfo(monday);
+      weeks.push({ monday, sunday, year: info.year, week: info.week });
+    }
+    return weeks;
+  }
+
+  function computeWeekReview(monday, sunday) {
+    const dateKeys = getWeekDateKeys(monday);
+    const days = getDays();
+    const profile = getProfile();
+    const history = loadJSON(K.history, []);
+    const weightLog = loadJSON(K.weightLog, []);
+    const prevMonday = addDays(monday, -7);
+    const prevDateKeys = getWeekDateKeys(prevMonday);
+
+    const loggedDays = dateKeys
+      .map((k) => ({ key: k, day: days[k] }))
+      .filter((x) => x.day && x.day.calories.length > 0)
+      .map((x) => ({
+        key: x.key,
+        kcal: x.day.calories.reduce((s, i) => s + i.kcal, 0),
+        protein: x.day.calories.reduce((s, i) => s + i.protein, 0),
+      }));
+
+    const avgKcal = loggedDays.length ? loggedDays.reduce((s, d) => s + d.kcal, 0) / loggedDays.length : 0;
+    const daysInGoal = loggedDays.filter((d) => Math.abs(d.kcal - profile.calorieGoal) <= 100).length;
+    let bestDay = null;
+    let worstDay = null;
+    if (loggedDays.length) {
+      bestDay = loggedDays.reduce((a, b) => (Math.abs(a.kcal - profile.calorieGoal) <= Math.abs(b.kcal - profile.calorieGoal) ? a : b));
+      worstDay = loggedDays.reduce((a, b) => (Math.abs(a.kcal - profile.calorieGoal) >= Math.abs(b.kcal - profile.calorieGoal) ? a : b));
+    }
+
+    const avgProtein = loggedDays.length ? loggedDays.reduce((s, d) => s + d.protein, 0) / loggedDays.length : 0;
+    const proteinQuotePct = profile.proteinGoal ? round((avgProtein / profile.proteinGoal) * 100) : 0;
+    const proteinDaysHit = loggedDays.filter((d) => d.protein >= profile.proteinGoal * 0.9).length;
+
+    const weekWorkouts = history.filter((h) => dateKeys.includes(h.date));
+    const weekVolume = weekWorkouts.reduce((s, h) => s + (h.volume || 0), 0);
+    const prevWeekVolume = history.filter((h) => prevDateKeys.includes(h.date)).reduce((s, h) => s + (h.volume || 0), 0);
+    const volumeChangePct = prevWeekVolume > 0 ? round(((weekVolume - prevWeekVolume) / prevWeekVolume) * 100) : null;
+
+    const newPRs = [];
+    const seenExercises = new Set();
+    weekWorkouts.forEach((h) => {
+      h.exercises.forEach((ex) => {
+        const baseline = getExercisePRBaseline(ex.exerciseId, dateKeys[0]);
+        const hasPR = ex.sets.some((s) => isNewPR(s, baseline));
+        if (hasPR && !seenExercises.has(ex.exerciseId)) {
+          seenExercises.add(ex.exerciseId);
+          const exData = getExerciseById(ex.exerciseId);
+          newPRs.push(exData ? exData.name : ex.exerciseId);
+        }
+      });
+    });
+
+    const weekWeights = weightLog.filter((w) => dateKeys.includes(w.date)).map((w) => w.weight);
+    const prevWeekWeights = weightLog.filter((w) => prevDateKeys.includes(w.date)).map((w) => w.weight);
+    const avgWeight = weekWeights.length ? weekWeights.reduce((a, b) => a + b, 0) / weekWeights.length : null;
+    const prevAvgWeight = prevWeekWeights.length ? prevWeekWeights.reduce((a, b) => a + b, 0) / prevWeekWeights.length : null;
+    const weightDelta = avgWeight !== null && prevAvgWeight !== null ? round10(avgWeight - prevAvgWeight) : null;
+
+    const avgWater = dateKeys.reduce((s, k) => s + (days[k]?.water || 0), 0) / 7;
+    const currentStreak = computeStreak();
+
+    let fazit;
+    if (loggedDays.length === 0 && weekWorkouts.length === 0) {
+      fazit = 'Keine Daten für diese Woche erfasst.';
+    } else if (loggedDays.length >= 5 && proteinDaysHit >= 6) {
+      fazit = `Protein-Ziel an ${proteinDaysHit} von ${loggedDays.length} geloggten Tagen erreicht — stark.`;
+    } else if (volumeChangePct !== null && volumeChangePct < 0 && weightDelta !== null && ((profile.goal === 'abnehmen' && weightDelta < 0) || (profile.goal === 'aufbau' && weightDelta > 0))) {
+      fazit = 'Volumen gesunken, aber Gewichtstrend passt zum Ziel.';
+    } else if (newPRs.length > 0) {
+      fazit = `${newPRs.length} neue${newPRs.length === 1 ? 'r' : ''} Rekord${newPRs.length === 1 ? '' : 'e'} diese Woche — die Arbeit zahlt sich aus.`;
+    } else if (daysInGoal >= 5) {
+      fazit = `An ${daysInGoal} von ${loggedDays.length} Tagen im Kalorienziel — solide Woche.`;
+    } else {
+      fazit = 'Durchwachsene Woche — nächste Woche wieder fokussieren.';
+    }
+
+    return {
+      monday, sunday, dateKeys,
+      avgKcal, daysInGoal, loggedDaysCount: loggedDays.length, bestDay, worstDay,
+      avgProtein, proteinQuotePct, proteinDaysHit,
+      workoutCount: weekWorkouts.length, weekVolume, volumeChangePct, newPRs,
+      avgWeight, prevAvgWeight, weightDelta,
+      avgWater, currentStreak, fazit,
+    };
+  }
+
+  function renderWeekReviewList() {
+    const el = document.getElementById('week-review-list');
+    const weeks = listCompletedWeeks(8);
+    el.innerHTML = weeks
+      .map(
+        (w) => `
+      <div class="week-row" data-monday="${dateKey(w.monday)}">
+        <span>KW ${w.week}</span>
+        <span class="week-range">${formatWeekRange(w.monday, w.sunday)}</span>
+      </div>
+    `
+      )
+      .join('');
+    el.querySelectorAll('.week-row').forEach((row) => {
+      row.addEventListener('click', () => {
+        const monday = new Date(row.dataset.monday);
+        openWeekReview(monday, addDays(monday, 6));
+      });
+    });
+  }
+
+  function openWeekReview(monday, sunday) {
+    const r = computeWeekReview(monday, sunday);
+    const info = getISOWeekInfo(monday);
+    document.getElementById('review-overlay').classList.remove('hidden');
+    document.getElementById('review-detail-content').innerHTML = `
+      <h1 class="headline">KW ${info.week}</h1>
+      <div class="workout-ex-meta">${formatWeekRange(monday, sunday)}</div>
+      <div class="review-stat-line">${r.workoutCount} WORKOUTS · Ø ${round(r.avgKcal)} KCAL${r.weightDelta !== null ? ` · ${r.weightDelta >= 0 ? '+' : ''}${r.weightDelta.toFixed(1).replace('.', ',')} KG` : ''}</div>
+
+      <div class="review-section-title">Kalorien</div>
+      <div class="review-fact-row"><span>Ø Gegessen vs. Ziel</span><span>${round(r.avgKcal)} / ${getProfile().calorieGoal} KCAL</span></div>
+      <div class="review-fact-row"><span>Tage im Ziel (±100 kcal)</span><span>${r.daysInGoal} / ${r.loggedDaysCount || 7}</span></div>
+      ${r.bestDay ? `<div class="review-fact-row"><span>Bester Tag</span><span>${r.bestDay.key} · ${round(r.bestDay.kcal)} KCAL</span></div>` : ''}
+      ${r.worstDay ? `<div class="review-fact-row"><span>Schwächster Tag</span><span>${r.worstDay.key} · ${round(r.worstDay.kcal)} KCAL</span></div>` : ''}
+
+      <div class="review-section-title">Protein</div>
+      <div class="review-fact-row"><span>Ø g/Tag vs. Ziel</span><span>${round(r.avgProtein)} / ${getProfile().proteinGoal} G</span></div>
+      <div class="review-fact-row"><span>Quote</span><span>${r.proteinQuotePct}%</span></div>
+
+      <div class="review-section-title">Training</div>
+      <div class="review-fact-row"><span>Workouts absolviert</span><span>${r.workoutCount}</span></div>
+      <div class="review-fact-row"><span>Gesamtvolumen</span><span>${round(r.weekVolume)} KG</span></div>
+      ${r.volumeChangePct !== null ? `<div class="review-fact-row"><span>Vs. Vorwoche</span><span>${r.volumeChangePct >= 0 ? '+' : ''}${r.volumeChangePct}%</span></div>` : ''}
+      ${r.newPRs.length > 0 ? `<div class="pr-highlight">${r.newPRs.length} NEUE REKORDE<br>${r.newPRs.join(', ')}</div>` : ''}
+
+      <div class="review-section-title">Gewicht</div>
+      ${r.avgWeight !== null
+        ? `<div class="review-fact-row"><span>Wochendurchschnitt</span><span>${r.avgWeight.toFixed(1).replace('.', ',')} KG</span></div>
+           ${r.weightDelta !== null ? `<div class="review-fact-row"><span>Vs. Vorwoche</span><span>${r.weightDelta >= 0 ? '+' : ''}${r.weightDelta.toFixed(1).replace('.', ',')} KG ${r.weightDelta > 0 ? '↑' : r.weightDelta < 0 ? '↓' : '→'}</span></div>` : ''}`
+        : `<div class="review-fact-row"><span>Keine Gewichtsdaten</span><span>–</span></div>`}
+
+      <div class="review-section-title">Wasser & Streak</div>
+      <div class="review-fact-row"><span>Ø Gläser/Tag</span><span>${r.avgWater.toFixed(1).replace('.', ',')}</span></div>
+      <div class="review-fact-row"><span>Aktuelle Streak</span><span>${r.currentStreak} Tage</span></div>
+
+      <div class="review-fazit">${r.fazit}</div>
+    `;
+  }
+
+  function closeWeekReview() {
+    document.getElementById('review-overlay').classList.add('hidden');
+  }
+
+  function maybeShowReviewBanner() {
+    const banner = document.getElementById('review-banner');
+    if (new Date().getDay() !== 1) {
+      banner.classList.add('hidden');
+      return;
+    }
+    const weeks = listCompletedWeeks(1);
+    if (weeks.length === 0) {
+      banner.classList.add('hidden');
+      return;
+    }
+    const lastWeek = weeks[0];
+    const weekKey = `${lastWeek.year}-W${lastWeek.week}`;
+    if (loadJSON(K.dismissedReviewBanner, null) === weekKey) {
+      banner.classList.add('hidden');
+      return;
+    }
+    const dateKeys = getWeekDateKeys(lastWeek.monday);
+    const days = getDays();
+    const history = loadJSON(K.history, []);
+    const hasData = dateKeys.some((k) => (days[k]?.calories?.length > 0) || history.some((h) => h.date === k));
+    if (!hasData) {
+      banner.classList.add('hidden');
+      return;
+    }
+    document.getElementById('review-banner-text').textContent = `WOCHEN-REVIEW KW ${lastWeek.week} VERFÜGBAR →`;
+    banner.dataset.weekKey = weekKey;
+    banner.dataset.monday = dateKey(lastWeek.monday);
+    banner.classList.remove('hidden');
+  }
+
+  function initWeekReviewHandlers() {
+    document.getElementById('review-back').addEventListener('click', closeWeekReview);
+    document.getElementById('review-banner').addEventListener('click', (e) => {
+      if (e.target.closest('#review-banner-dismiss')) return;
+      const banner = document.getElementById('review-banner');
+      const monday = new Date(banner.dataset.monday);
+      openWeekReview(monday, addDays(monday, 6));
+    });
+    document.getElementById('review-banner-dismiss').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const banner = document.getElementById('review-banner');
+      saveJSON(K.dismissedReviewBanner, banner.dataset.weekKey);
+      banner.classList.add('hidden');
+    });
   }
 
   /* ==========================================================================
@@ -2632,8 +3404,10 @@
     initScannerHandlers();
     initRecipeHandlers();
     initTrainingHandlers();
+    initIntervalHandlers();
     initWorkoutModeHandlers();
     initFortschrittHandlers();
+    initWeekReviewHandlers();
     initProfilHandlers();
 
     const profile = getProfile();

@@ -83,6 +83,11 @@
 
       <div class="streak-bar" id="streak-bar">0 TAGE IN FOLGE</div>
 
+      <div id="review-banner" class="review-banner hidden">
+        <span id="review-banner-text"></span>
+        <button id="review-banner-dismiss" class="btn-close">✕</button>
+      </div>
+
       <div class="hr"></div>
 
       <div class="card">
@@ -257,6 +262,13 @@
         <div class="card-label">PERSÖNLICHE REKORDE</div>
         <div id="personal-records"></div>
       </div>
+
+      <div class="hr"></div>
+
+      <div class="card">
+        <div class="card-label">WOCHEN-REVIEW</div>
+        <div id="week-review-list"></div>
+      </div>
     </section>
 
     <!-- ---------- 5. PROFIL ---------- -->
@@ -337,6 +349,41 @@
         </div>
         <button id="rest-skip" class="btn btn-primary btn-full">Pause überspringen</button>
       </div>
+
+      <div id="workout-summary" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- ========== HIIT-INTERVALL-TIMER ========== -->
+  <div id="interval-timer" class="overlay hidden">
+    <div class="interval-inner">
+      <div class="interval-top">
+        <button class="btn-close" id="interval-close">✕</button>
+        <div class="section-label" id="interval-round-label">RUNDE 1/8</div>
+      </div>
+      <div class="interval-progress-track"><div class="interval-progress-fill" id="interval-progress-fill"></div></div>
+
+      <div class="interval-phase-label" id="interval-phase-label">BEREIT</div>
+      <div class="interval-countdown" id="interval-countdown">10</div>
+
+      <div class="interval-exercise-current" id="interval-exercise-current"></div>
+      <div class="interval-exercise-next" id="interval-exercise-next"></div>
+
+      <div class="interval-actions" id="interval-actions">
+        <button class="btn btn-ghost" id="interval-pause">Pause</button>
+        <button class="btn btn-ghost" id="interval-cancel-btn">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== WOCHEN-REVIEW OVERLAY ========== -->
+  <div id="review-overlay" class="overlay hidden">
+    <div class="recipe-overlay-inner">
+      <div class="recipe-overlay-top">
+        <button class="btn-close" id="review-back">←</button>
+        <span></span>
+      </div>
+      <div id="review-detail-content"></div>
     </div>
   </div>
 
