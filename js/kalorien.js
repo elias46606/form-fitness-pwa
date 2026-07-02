@@ -178,12 +178,14 @@ import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
       openAddFoodModal(foodId, editEntry);
     });
 
-    body.querySelector('#af-save').addEventListener('click', () => {
+    body.querySelector('#af-save').addEventListener('click', (e) => {
       const amt = parseFloat(amountInput.value);
       if (!amt || amt <= 0) {
         showToast('Bitte gültige Menge eingeben.');
         return;
       }
+      if (e.currentTarget.disabled) return;
+      e.currentTarget.disabled = true;
       const factor = amt / 100;
       const entry = {
         id: editEntry ? editEntry.id : uid(),

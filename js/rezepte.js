@@ -232,7 +232,9 @@ import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
       }
     });
 
-    document.getElementById('recipe-add-log').addEventListener('click', () => {
+    document.getElementById('recipe-add-log').addEventListener('click', (e) => {
+      if (e.currentTarget.disabled) return;
+      e.currentTarget.disabled = true;
       const totals = computeScaledTotals(recipe, recipePortionState.factor, recipePortionState.excluded);
       const entry = {
         id: uid(),

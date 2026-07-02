@@ -675,8 +675,10 @@ import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
       renderWorkoutExercise();
     });
 
-    view.querySelector('#wo-next').addEventListener('click', () => {
+    view.querySelector('#wo-next').addEventListener('click', (e) => {
       if (workoutState.currentIndex === workoutState.exercises.length - 1) {
+        if (e.currentTarget.disabled) return;
+        e.currentTarget.disabled = true;
         finishWorkout();
       } else {
         showRestTimer();
