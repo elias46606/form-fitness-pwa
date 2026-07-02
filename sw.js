@@ -1,10 +1,20 @@
-const CACHE_NAME = 'form-cache-v1';
+const CACHE_NAME = 'form-cache-v2';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
-  './app.js',
   './data.js',
+  './js/storage.js',
+  './js/ui.js',
+  './js/heute.js',
+  './js/kalorien.js',
+  './js/scanner.js',
+  './js/rezepte.js',
+  './js/training.js',
+  './js/timer.js',
+  './js/fortschritt.js',
+  './js/review.js',
+  './js/profil.js',
   './manifest.json',
   './icons/icon.svg',
   './icons/icon-192.png',

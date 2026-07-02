@@ -1,7 +1,7 @@
 /* FORM — Datenbank: Lebensmittel, Übungen, Trainingspläne
    Alle Nährwerte pro 100g / 100ml. Alle Werte sind Richtwerte. */
 
-const FOOD_DB = [
+export const FOOD_DB = [
   // Getreide / Kohlenhydrate
   { id: 'haferflocken', name: 'Haferflocken', kcal: 372, protein: 13.5, carbs: 58, fat: 7 },
   { id: 'reis_roh', name: 'Reis (weiß, roh)', kcal: 350, protein: 7, carbs: 77, fat: 0.6 },
@@ -151,7 +151,7 @@ const FOOD_DB = [
 ];
 
 /* Übungen: Home-Training ohne Geräte (Körpergewicht + optional Kurzhanteln/Band) */
-const EXERCISES = [
+export const EXERCISES = [
   // Brust
   { id: 'liegestuetze', name: 'Liegestütze', group: 'Brust', level: 'Mittel', equipment: 'Körpergewicht',
     desc: 'Hände schulterbreit auf dem Boden, Körper bildet eine gerade Linie von Kopf bis Ferse. Brust kontrolliert Richtung Boden senken, dann kraftvoll nach oben drücken.' },
@@ -277,10 +277,10 @@ const EXERCISES = [
     desc: 'Lockeres Boxen gegen die Luft mit fließenden Schritten. Gelenkschonendes Cardio-Training, das sich beliebig steigern lässt.' },
 ];
 
-const MUSCLE_GROUPS = ['Brust', 'Rücken', 'Beine', 'Schultern', 'Arme', 'Core', 'Cardio'];
+export const MUSCLE_GROUPS = ['Brust', 'Rücken', 'Beine', 'Schultern', 'Arme', 'Core', 'Cardio'];
 
 /* Fertige Trainingspläne */
-const WORKOUT_PLANS = [
+export const WORKOUT_PLANS = [
   {
     id: 'starter',
     name: 'STARTER',
@@ -421,7 +421,7 @@ const WORKOUT_PLANS = [
 
 /* Progressionsketten für Körpergewichtsübungen: aktuelle Übung -> nächste Stufe.
    Vorschlag greift, wenn 3 Sätze mit je 15+ Wdh erreicht wurden. */
-const BODYWEIGHT_PROGRESSIONS = {
+export const BODYWEIGHT_PROGRESSIONS = {
   knie_liegestuetze: 'liegestuetze',
   liegestuetze: 'liegestuetze_erhoeht',
   liegestuetze_erhoeht: 'archer_liegestuetze',
@@ -439,7 +439,7 @@ const BODYWEIGHT_PROGRESSIONS = {
    automatisch und konsistent aus den Zutaten berechnet werden.
    ========================================================================== */
 
-function ing(foodId, grams, menge, einheit) {
+export function ing(foodId, grams, menge, einheit) {
   return { foodId, grams, menge: menge !== undefined ? menge : grams, einheit: einheit || 'g' };
 }
 
@@ -573,7 +573,7 @@ const RECIPES_RAW = [
     zubereitung: ['Hüttenkäse in eine Schale geben.', 'Ananasstücke daraufgeben.'] },
 ];
 
-function buildRecipe(raw) {
+export function buildRecipe(raw) {
   const zutaten = raw.zutaten.map((z) => {
     const food = FOOD_DB.find((f) => f.id === z.foodId);
     const factor = z.grams / 100;
@@ -627,8 +627,4 @@ function buildRecipe(raw) {
   };
 }
 
-const RECIPES = RECIPES_RAW.map(buildRecipe);
-
-if (typeof module !== 'undefined') {
-  module.exports = { FOOD_DB, EXERCISES, MUSCLE_GROUPS, WORKOUT_PLANS, BODYWEIGHT_PROGRESSIONS, RECIPES, buildRecipe };
-}
+export const RECIPES = RECIPES_RAW.map(buildRecipe);
