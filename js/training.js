@@ -1,7 +1,7 @@
 /* FORM — training.js — Training-Tab: Übungsbrowser, Pläne, Workout-Modus, Progressive Overload. */
 import { BODYWEIGHT_PROGRESSIONS, EXERCISES, MUSCLE_GROUPS, WORKOUT_PLANS } from '../data.js';
 import { formatDaySummaryLine, renderHeute } from './heute.js';
-import { K, WEEKDAY_NAMES, WEEKDAY_SHORT, getActivePlanObj, getDay, getExerciseById, getPlanById, loadJSON, round, round10, saveJSON, todayKey, uid } from './storage.js';
+import { K, WEEKDAY_NAMES, WEEKDAY_SHORT, deComma, getActivePlanObj, getDay, getExerciseById, getPlanById, loadJSON, round, round10, saveJSON, todayKey, uid } from './storage.js';
 import { startIntervalWorkout } from './timer.js';
 import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
 
@@ -507,7 +507,7 @@ import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
   export function formatLastPerformance(last) {
     if (!last) return null;
     const first = last.sets[0];
-    return `${last.sets.length}×${first.reps}${first.weight ? ' · ' + first.weight + 'KG' : ''}`;
+    return `${last.sets.length}×${first.reps}${first.weight ? ' · ' + deComma(first.weight) + 'KG' : ''}`;
   }
 
   export function computeSuggestion(exerciseId, planTargetReps) {

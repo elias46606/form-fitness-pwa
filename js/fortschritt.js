@@ -1,6 +1,6 @@
 /* FORM — fortschritt.js — Fortschritt-Tab: Charts, Kalender, Körpermaße, Rekorde. */
 import { renderWeekReviewList } from './review.js';
-import { K, WEEKDAY_SHORT, addDays, dateKey, getDay, getDays, getExerciseById, getProfile, loadJSON, saveJSON, todayKey } from './storage.js';
+import { K, WEEKDAY_SHORT, addDays, dateKey, deComma, getDay, getDays, getExerciseById, getProfile, loadJSON, saveJSON, todayKey } from './storage.js';
 import { showToast } from './ui.js';
 
   /* ==========================================================================
@@ -93,9 +93,9 @@ import { showToast } from './ui.js';
 
     ctx.font = '10px "SF Mono", "Space Mono", monospace';
     ctx.fillStyle = '#555555';
-    ctx.fillText(`${min.toFixed(1)} KG`, 0, h - 4);
+    ctx.fillText(`${deComma(min.toFixed(1))} KG`, 0, h - 4);
     ctx.textAlign = 'right';
-    ctx.fillText(`${max.toFixed(1)} KG`, w, 12);
+    ctx.fillText(`${deComma(max.toFixed(1))} KG`, w, 12);
     ctx.textAlign = 'left';
   }
 
@@ -229,7 +229,7 @@ import { showToast } from './ui.js';
         const ex = getExerciseById(id);
         const r = records[id];
         const parts = [];
-        if (r.maxWeight > 0) parts.push(`${r.maxWeight} KG`);
+        if (r.maxWeight > 0) parts.push(`${deComma(r.maxWeight)} KG`);
         if (r.maxReps > 0) parts.push(`${r.maxReps} WDH`);
         return `
         <div class="pr-row">

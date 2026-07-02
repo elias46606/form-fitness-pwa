@@ -209,3 +209,9 @@ import { EXERCISES, FOOD_DB, WORKOUT_PLANS } from '../data.js';
   export function round10(v) {
     return Math.round(v * 10) / 10;
   }
+
+  /* Deutsches Dezimalformat für Anzeige: Punkt -> Komma. Intern wird
+     weiterhin mit JS-Zahlen (Punkt) gerechnet, nur die Anzeige ändert sich. */
+  export function deComma(value) {
+    return String(value).replace('.', ',');
+  }

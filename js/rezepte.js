@@ -2,7 +2,7 @@
 import { RECIPES, buildRecipe, ing } from '../data.js';
 import { renderHeute } from './heute.js';
 import { renderKalorien } from './kalorien.js';
-import { K, MEALS, allFoods, findFood, getDay, getProfile, loadJSON, round, saveDay, saveJSON, todayKey, uid } from './storage.js';
+import { K, MEALS, allFoods, deComma, findFood, getDay, getProfile, loadJSON, round, saveDay, saveJSON, todayKey, uid } from './storage.js';
 import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
 
   /* ==========================================================================
@@ -95,7 +95,7 @@ import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
           <div class="exercise-card-head">
             <div>
               <div class="recipe-card-name">${r.name}</div>
-              <div class="recipe-card-meta">${r.gesamtNaehrwerte.kcal} KCAL · ${r.gesamtNaehrwerte.protein}G PROTEIN · ${r.zubereitungszeit} MIN</div>
+              <div class="recipe-card-meta">${round(r.gesamtNaehrwerte.kcal)} KCAL · ${round(r.gesamtNaehrwerte.protein)}G PROTEIN · ${r.zubereitungszeit} MIN</div>
             </div>
             <button class="recipe-fav-star" data-fav-id="${r.id}">${isFav ? '★' : '☆'}</button>
           </div>
@@ -132,7 +132,7 @@ import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
   export function fmtRecipeAmount(menge, einheit, factor) {
     const scaled = menge * factor;
     const rounded = einheit === 'g' || einheit === 'ml' ? Math.round(scaled) : Math.round(scaled * 10) / 10;
-    return `${rounded} ${einheit}`;
+    return `${deComma(rounded)} ${einheit}`;
   }
 
   export function computeScaledTotals(recipe, factor, excluded) {
@@ -182,7 +182,7 @@ import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
       <div class="workout-ex-meta" id="recipe-meta-line"></div>
 
       <div class="portion-selector" id="recipe-portions">
-        ${[0.5, 1, 1.5, 2].map((p) => `<button type="button" class="chip ${p === recipePortionState.factor ? 'active' : ''}" data-factor="${p}">${p.toString().replace('.', ',')}×</button>`).join('')}
+        ${[0.5, 1, 1.5, 2].map((p) => `<button type="button" class="chip ${p === recipePortionState.factor ? 'active' : ''}" data-factor="${p}">${deComma(p)}×</button>`).join('')}
       </div>
 
       <div class="card-label">ZUTATEN</div>
@@ -237,7 +237,7 @@ import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
       const entry = {
         id: uid(),
         foodId: null,
-        name: `${recipe.name} (${recipePortionState.factor.toString().replace('.', ',')}×)`,
+        name: `${recipe.name} (${deComma(recipePortionState.factor)}×)`,
         amount: null,
         meal: recipeSelectedMeal,
         kcal: totals.kcal,
@@ -453,7 +453,7 @@ import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
         (r) => `
       <div class="suggestion-card" data-id="${r.id}">
         <div class="suggestion-card-name">${r.name}</div>
-        <div class="suggestion-card-meta">${r.gesamtNaehrwerte.kcal} KCAL · ${r.gesamtNaehrwerte.protein}G PROTEIN · ${r.zubereitungszeit} MIN</div>
+        <div class="suggestion-card-meta">${round(r.gesamtNaehrwerte.kcal)} KCAL · ${round(r.gesamtNaehrwerte.protein)}G PROTEIN · ${r.zubereitungszeit} MIN</div>
       </div>
     `
       )

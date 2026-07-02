@@ -1,7 +1,7 @@
 /* FORM — scanner.js — Barcode-Scanner + OpenFoodFacts-Anbindung. */
 import { renderHeute } from './heute.js';
 import { openCustomFoodModal, renderKalorien } from './kalorien.js';
-import { K, MEALS, getDay, loadJSON, round, round10, saveDay, saveJSON, todayKey, uid } from './storage.js';
+import { K, MEALS, deComma, getDay, loadJSON, round, round10, saveDay, saveJSON, todayKey, uid } from './storage.js';
 import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
 
   /* ==========================================================================
@@ -18,7 +18,23 @@ import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
     rafId: null,
     html5QrCode: null,
     detector: null,
+    pausedByVisibility: false,
   };
+
+  function onScannerVisibilityChange() {
+    const overlayOpen = !document.getElementById('scanner-overlay').classList.contains('hidden');
+    if (!overlayOpen) return;
+    if (document.visibilityState === 'hidden') {
+      if (scannerState.stream || scannerState.html5QrCode) {
+        scannerState.pausedByVisibility = true;
+        stopScanner();
+      }
+    } else if (scannerState.pausedByVisibility) {
+      scannerState.pausedByVisibility = false;
+      showScannerState('status', 'Kamera wird aktiviert…');
+      startScanner();
+    }
+  }
 
   export function loadScript(src) {
     return new Promise((resolve, reject) => {
@@ -54,11 +70,14 @@ import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
     document.getElementById('scanner-overlay').classList.remove('hidden');
     document.getElementById('scanner-manual-input').value = '';
     showScannerState('status', 'Kamera wird aktiviert…');
+    document.addEventListener('visibilitychange', onScannerVisibilityChange);
     startScanner();
   }
 
   export function closeScannerOverlay() {
     stopScanner();
+    scannerState.pausedByVisibility = false;
+    document.removeEventListener('visibilitychange', onScannerVisibilityChange);
     document.getElementById('scanner-overlay').classList.add('hidden');
   }
 
@@ -288,7 +307,7 @@ import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
   }
 
   export function fmtNutrient(v, unit) {
-    return typeof v === 'number' ? `${round10(v)} ${unit}` : '–';
+    return typeof v === 'number' ? `${deComma(round10(v))} ${unit}` : '–';
   }
 
   export function persistScannedProduct(product) {

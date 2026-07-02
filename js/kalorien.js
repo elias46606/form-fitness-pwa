@@ -2,7 +2,7 @@
 import { renderHeute } from './heute.js';
 import { renderRecipeList, renderRecipesPanel } from './rezepte.js';
 import { openScanner } from './scanner.js';
-import { K, MEALS, allFoods, findFood, getDay, loadJSON, round, saveDay, saveJSON, todayKey, uid } from './storage.js';
+import { K, MEALS, allFoods, deComma, findFood, getDay, loadJSON, round, saveDay, saveJSON, todayKey, uid } from './storage.js';
 import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
 
   /* ==========================================================================
@@ -66,7 +66,7 @@ import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
         <div class="food-row">
           <div class="food-row-main">
             <div class="food-name">${f.name}</div>
-            <div class="food-meta">${f.kcal} KCAL · ${f.protein}P ${f.carbs}K ${f.fat}F / 100G</div>
+            <div class="food-meta">${f.kcal} KCAL · ${deComma(f.protein)}P ${deComma(f.carbs)}K ${deComma(f.fat)}F / 100G</div>
           </div>
           <div class="food-row-action">
             <button class="btn btn-primary btn-small" data-food-id="${f.id}">+</button>

@@ -1,6 +1,6 @@
 /* FORM — profil.js — Profil-Tab: Angaben, Ziele, Export/Import/Reset. */
 import { renderHeute } from './heute.js';
-import { ALL_KEYS, K, calcGoals, getProfile, saveJSON, todayKey } from './storage.js';
+import { ALL_KEYS, K, calcGoals, deComma, getProfile, saveJSON, todayKey } from './storage.js';
 import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
 
   /* ==========================================================================
@@ -23,7 +23,7 @@ import { bindChipSelect, closeModal, openModal, showToast } from './ui.js';
       <div class="profile-row"><span>Alter</span><span>${profile.age} Jahre</span></div>
       <div class="profile-row"><span>Geschlecht</span><span>${profile.gender === 'm' ? 'Männlich' : 'Weiblich'}</span></div>
       <div class="profile-row"><span>Größe</span><span>${profile.height} cm</span></div>
-      <div class="profile-row"><span>Gewicht</span><span>${profile.weight} kg</span></div>
+      <div class="profile-row"><span>Gewicht</span><span>${deComma(profile.weight)} kg</span></div>
       <div class="profile-row"><span>Aktivität</span><span>${ACTIVITY_LABELS[profile.activity] || profile.activity}</span></div>
       <div class="profile-row"><span>Ziel</span><span>${GOAL_LABELS[profile.goal] || profile.goal}</span></div>
     `;

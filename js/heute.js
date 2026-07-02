@@ -1,6 +1,6 @@
 /* FORM — heute.js — Dashboard-Tab: Kalorien-/Makro-Übersicht, Wasser, Streak, Trainingskarte. */
 import { maybeShowReviewBanner } from './review.js';
-import { GLASS_ML, K, MONTH_NAMES, WATER_GOAL_ML, WEEKDAY_NAMES, addDays, clamp, dateKey, getActivePlanObj, getDay, getDays, getProfile, loadJSON, round, saveDay, todayKey } from './storage.js';
+import { GLASS_ML, K, MONTH_NAMES, WATER_GOAL_ML, WEEKDAY_NAMES, addDays, clamp, dateKey, deComma, getActivePlanObj, getDay, getDays, getProfile, loadJSON, round, saveDay, todayKey } from './storage.js';
 import { startWorkout } from './training.js';
 import { showToast } from './ui.js';
 
@@ -134,7 +134,7 @@ import { showToast } from './ui.js';
     const el = document.getElementById('water-tracker');
     let html = '';
     for (let i = 1; i <= totalGlasses; i++) {
-      html += `<button class="water-glass ${i <= filled ? 'filled' : ''}" data-idx="${i}">${i * GLASS_ML >= 1000 ? (i * GLASS_ML / 1000).toFixed(2).replace(/0$/, '') + 'L' : i * GLASS_ML + 'ML'}</button>`;
+      html += `<button class="water-glass ${i <= filled ? 'filled' : ''}" data-idx="${i}">${i * GLASS_ML >= 1000 ? deComma((i * GLASS_ML / 1000).toFixed(2).replace(/0$/, '')) + 'L' : i * GLASS_ML + 'ML'}</button>`;
     }
     el.innerHTML = html;
     el.querySelectorAll('.water-glass').forEach((btn) => {

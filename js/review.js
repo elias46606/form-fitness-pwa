@@ -1,6 +1,6 @@
 /* FORM — review.js — Wochen-Review-Berechnung und -Ansicht. */
 import { computeStreak } from './heute.js';
-import { K, addDays, dateKey, getDay, getDays, getExerciseById, getProfile, loadJSON, round, round10, saveJSON } from './storage.js';
+import { K, addDays, dateKey, deComma, getDay, getDays, getExerciseById, getProfile, loadJSON, round, round10, saveJSON } from './storage.js';
 import { getExercisePRBaseline, isNewPR } from './training.js';
 
   /* ==========================================================================
@@ -157,7 +157,7 @@ import { getExercisePRBaseline, isNewPR } from './training.js';
     document.getElementById('review-detail-content').innerHTML = `
       <h1 class="headline">KW ${info.week}</h1>
       <div class="workout-ex-meta">${formatWeekRange(monday, sunday)}</div>
-      <div class="review-stat-line">${r.workoutCount} WORKOUTS · Ø ${round(r.avgKcal)} KCAL${r.weightDelta !== null ? ` · ${r.weightDelta >= 0 ? '+' : ''}${r.weightDelta.toFixed(1).replace('.', ',')} KG` : ''}</div>
+      <div class="review-stat-line">${r.workoutCount} WORKOUTS · Ø ${round(r.avgKcal)} KCAL${r.weightDelta !== null ? ` · ${r.weightDelta >= 0 ? '+' : ''}${deComma(r.weightDelta.toFixed(1))} KG` : ''}</div>
 
       <div class="review-section-title">Kalorien</div>
       <div class="review-fact-row"><span>Ø Gegessen vs. Ziel</span><span>${round(r.avgKcal)} / ${getProfile().calorieGoal} KCAL</span></div>
@@ -177,12 +177,12 @@ import { getExercisePRBaseline, isNewPR } from './training.js';
 
       <div class="review-section-title">Gewicht</div>
       ${r.avgWeight !== null
-        ? `<div class="review-fact-row"><span>Wochendurchschnitt</span><span>${r.avgWeight.toFixed(1).replace('.', ',')} KG</span></div>
-           ${r.weightDelta !== null ? `<div class="review-fact-row"><span>Vs. Vorwoche</span><span>${r.weightDelta >= 0 ? '+' : ''}${r.weightDelta.toFixed(1).replace('.', ',')} KG ${r.weightDelta > 0 ? '↑' : r.weightDelta < 0 ? '↓' : '→'}</span></div>` : ''}`
+        ? `<div class="review-fact-row"><span>Wochendurchschnitt</span><span>${deComma(r.avgWeight.toFixed(1))} KG</span></div>
+           ${r.weightDelta !== null ? `<div class="review-fact-row"><span>Vs. Vorwoche</span><span>${r.weightDelta >= 0 ? '+' : ''}${deComma(r.weightDelta.toFixed(1))} KG ${r.weightDelta > 0 ? '↑' : r.weightDelta < 0 ? '↓' : '→'}</span></div>` : ''}`
         : `<div class="review-fact-row"><span>Keine Gewichtsdaten</span><span>–</span></div>`}
 
       <div class="review-section-title">Wasser & Streak</div>
-      <div class="review-fact-row"><span>Ø Gläser/Tag</span><span>${r.avgWater.toFixed(1).replace('.', ',')}</span></div>
+      <div class="review-fact-row"><span>Ø Gläser/Tag</span><span>${deComma(r.avgWater.toFixed(1))}</span></div>
       <div class="review-fact-row"><span>Aktuelle Streak</span><span>${r.currentStreak} Tage</span></div>
 
       <div class="review-fazit">${r.fazit}</div>
