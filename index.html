@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>FORM</title>
+<meta name="description" content="FORM — reines Home-Training. Kalorien, Training, Fortschritt.">
+<meta name="theme-color" content="#FAFAF8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FORM">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ========== ONBOARDING ========== -->
+  <div id="onboarding" class="overlay hidden">
+    <div class="onboarding-inner">
+      <div class="section-label">00 · WILLKOMMEN</div>
+      <h1 class="headline">Miss dich<br><span class="fat">selbst.</span></h1>
+      <p class="sub">Ein paar Angaben, damit FORM deine Ziele berechnen kann.</p>
+
+      <form id="onboarding-form">
+        <div class="ob-step" data-step="1">
+          <div class="field-label">Alter</div>
+          <input type="number" id="ob-age" min="12" max="99" required placeholder="z. B. 28">
+
+          <div class="field-label">Geschlecht</div>
+          <div class="chip-group" id="ob-gender">
+            <button type="button" class="chip" data-value="m">Männlich</button>
+            <button type="button" class="chip" data-value="w">Weiblich</button>
+          </div>
+
+          <div class="field-label">Größe (cm)</div>
+          <input type="number" id="ob-height" min="100" max="230" required placeholder="z. B. 178">
+
+          <div class="field-label">Gewicht (kg)</div>
+          <input type="number" id="ob-weight" min="30" max="300" step="0.1" required placeholder="z. B. 74.5">
+        </div>
+
+        <div class="ob-step" data-step="2">
+          <div class="field-label">Aktivitätslevel</div>
+          <div class="chip-group vertical" id="ob-activity">
+            <button type="button" class="chip" data-value="1.2">Kaum aktiv — Bürojob, wenig Bewegung</button>
+            <button type="button" class="chip" data-value="1.375">Leicht aktiv — 1-3x Training/Woche</button>
+            <button type="button" class="chip" data-value="1.55">Mäßig aktiv — 3-5x Training/Woche</button>
+            <button type="button" class="chip" data-value="1.725">Sehr aktiv — 6-7x Training/Woche</button>
+            <button type="button" class="chip" data-value="1.9">Extrem aktiv — körperliche Arbeit + Training</button>
+          </div>
+
+          <div class="field-label">Ziel</div>
+          <div class="chip-group vertical" id="ob-goal">
+            <button type="button" class="chip" data-value="abnehmen">Abnehmen</button>
+            <button type="button" class="chip" data-value="halten">Gewicht halten</button>
+            <button type="button" class="chip" data-value="aufbau">Muskelaufbau</button>
+          </div>
+        </div>
+
+        <div class="ob-nav">
+          <button type="button" id="ob-back" class="btn btn-ghost hidden">Zurück</button>
+          <button type="button" id="ob-next" class="btn btn-primary">Weiter</button>
+          <button type="submit" id="ob-submit" class="btn btn-primary hidden">Los geht's</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========== MAIN VIEWS ========== -->
+  <main id="views">
+
+    <!-- ---------- 1. HEUTE ---------- -->
+    <section id="view-heute" class="view active" data-view="heute">
+      <header class="view-header">
+        <div class="section-label">01 · HEUTE</div>
+        <h1 class="headline" id="heute-date">Montag<br><span class="fat">01. Januar</span></h1>
+      </header>
+
+      <div class="streak-bar" id="streak-bar">0 TAGE IN FOLGE</div>
+
+      <div class="hr"></div>
+
+      <div class="card">
+        <div class="card-label">KALORIEN</div>
+        <div id="calorie-summary" class="calorie-summary"></div>
+        <div id="calorie-bar" class="bar-track"><div class="bar-fill" id="calorie-bar-fill"></div></div>
+        <div class="calorie-legend" id="calorie-legend"></div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="card">
+        <div class="card-label">MAKROS</div>
+        <div id="macro-bars"></div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="card">
+        <div class="card-label">WASSER · ZIEL 2,5L</div>
+        <div id="water-tracker" class="water-tracker"></div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="card">
+        <div class="card-label">SCHRITTE</div>
+        <div class="steps-row">
+          <input type="number" id="steps-input" placeholder="0" inputmode="numeric">
+          <button id="steps-save" class="btn btn-primary btn-small">Speichern</button>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="card" id="today-workout-card">
+        <div class="card-label">TRAINING HEUTE</div>
+        <div id="today-workout"></div>
+      </div>
+    </section>
+
+    <!-- ---------- 2. KALORIEN ---------- -->
+    <section id="view-kalorien" class="view" data-view="kalorien">
+      <header class="view-header">
+        <div class="section-label">02 · KALORIEN</div>
+        <h1 class="headline">Iss bewusst,<br><span class="fat">nicht weniger.</span></h1>
+      </header>
+
+      <div class="search-row">
+        <input type="text" id="food-search" placeholder="Lebensmittel suchen…" autocomplete="off">
+      </div>
+
+      <div id="quick-recent" class="chip-scroll"></div>
+
+      <div id="food-search-results" class="food-results"></div>
+
+      <div class="hr"></div>
+
+      <div class="card">
+        <div class="card-label">EIGENES LEBENSMITTEL</div>
+        <button id="btn-custom-food" class="btn btn-ghost btn-full">+ Eigenes Lebensmittel anlegen</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <div id="meals-container"></div>
+    </section>
+
+    <!-- ---------- 3. TRAINING ---------- -->
+    <section id="view-training" class="view" data-view="training">
+      <header class="view-header">
+        <div class="section-label">03 · TRAINING</div>
+        <h1 class="headline">Trainiere zuhause,<br><span class="fat">ohne Ausreden.</span></h1>
+      </header>
+
+      <div class="tab-row" id="training-subtabs">
+        <button class="subtab active" data-subtab="plaene">PLÄNE</button>
+        <button class="subtab" data-subtab="uebungen">ÜBUNGEN</button>
+        <button class="subtab" data-subtab="verlauf">VERLAUF</button>
+      </div>
+
+      <div id="training-plaene" class="training-panel">
+        <div class="card-label">DEIN PLAN</div>
+        <div id="active-plan"></div>
+        <div class="hr"></div>
+        <div class="card-label">FERTIGE PLÄNE</div>
+        <div id="plan-list"></div>
+        <div class="hr"></div>
+        <button id="btn-custom-plan" class="btn btn-ghost btn-full">+ Eigenen Plan erstellen</button>
+      </div>
+
+      <div id="training-uebungen" class="training-panel hidden">
+        <div class="search-row">
+          <input type="text" id="exercise-search" placeholder="Übung suchen…" autocomplete="off">
+        </div>
+        <div class="chip-scroll" id="muscle-filter"></div>
+        <div id="exercise-list"></div>
+      </div>
+
+      <div id="training-verlauf" class="training-panel hidden">
+        <div id="workout-history"></div>
+      </div>
+    </section>
+
+    <!-- ---------- 4. FORTSCHRITT ---------- -->
+    <section id="view-fortschritt" class="view" data-view="fortschritt">
+      <header class="view-header">
+        <div class="section-label">04 · FORTSCHRITT</div>
+        <h1 class="headline">Was du misst,<br><span class="fat">verbesserst du.</span></h1>
+      </header>
+
+      <div class="card">
+        <div class="card-label">GEWICHT</div>
+        <div class="steps-row">
+          <input type="number" id="weight-input" step="0.1" placeholder="kg" inputmode="decimal">
+          <button id="weight-save" class="btn btn-primary btn-small">Eintragen</button>
+        </div>
+        <canvas id="weight-chart" height="160"></canvas>
+        <div id="weight-empty" class="empty-state hidden">Noch keine Einträge.</div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="card">
+        <div class="card-label">KALORIEN · WOCHE</div>
+        <canvas id="calorie-chart" height="160"></canvas>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="card">
+        <div class="card-label">TRAININGS-KALENDER</div>
+        <div id="training-calendar" class="training-calendar"></div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="card">
+        <div class="card-label">KÖRPERMASSE</div>
+        <div id="body-measurements"></div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="card">
+        <div class="card-label">PERSÖNLICHE REKORDE</div>
+        <div id="personal-records"></div>
+      </div>
+    </section>
+
+    <!-- ---------- 5. PROFIL ---------- -->
+    <section id="view-profil" class="view" data-view="profil">
+      <header class="view-header">
+        <div class="section-label">05 · PROFIL</div>
+        <h1 class="headline">Deine Regeln,<br><span class="fat">dein Fortschritt.</span></h1>
+      </header>
+
+      <div class="card">
+        <div class="card-label">PERSÖNLICHE DATEN</div>
+        <div id="profile-data"></div>
+        <button id="btn-edit-profile" class="btn btn-ghost btn-full">Angaben bearbeiten</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="card">
+        <div class="card-label">ZIELE</div>
+        <div id="profile-goals"></div>
+        <button id="btn-edit-goals" class="btn btn-ghost btn-full">Ziele anpassen</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="card">
+        <div class="card-label">DATEN</div>
+        <button id="btn-export" class="btn btn-ghost btn-full">Daten exportieren (JSON)</button>
+        <label class="btn btn-ghost btn-full file-btn">
+          Daten importieren (JSON)
+          <input type="file" id="btn-import" accept="application/json" hidden>
+        </label>
+        <button id="btn-reset" class="btn btn-danger btn-full">Alles zurücksetzen</button>
+      </div>
+
+      <div class="hr"></div>
+      <div class="app-footer">FORM · v1.0 · 100% OFFLINE</div>
+    </section>
+
+  </main>
+
+  <!-- ========== BOTTOM NAV ========== -->
+  <nav id="bottom-nav">
+    <button class="nav-btn active" data-view="heute">
+      <span class="nav-label">HEUTE</span>
+    </button>
+    <button class="nav-btn" data-view="kalorien">
+      <span class="nav-label">KALORIEN</span>
+    </button>
+    <button class="nav-btn" data-view="training">
+      <span class="nav-label">TRAINING</span>
+    </button>
+    <button class="nav-btn" data-view="fortschritt">
+      <span class="nav-label">FORTSCHRITT</span>
+    </button>
+    <button class="nav-btn" data-view="profil">
+      <span class="nav-label">PROFIL</span>
+    </button>
+  </nav>
+
+  <!-- ========== WORKOUT MODE OVERLAY ========== -->
+  <div id="workout-mode" class="overlay hidden">
+    <div class="workout-mode-inner">
+      <div class="workout-header">
+        <button id="workout-close" class="btn-close">✕</button>
+        <div class="section-label" id="workout-progress">ÜBUNG 1 / 5</div>
+      </div>
+
+      <div id="workout-exercise-view"></div>
+
+      <div id="workout-rest" class="workout-rest hidden">
+        <div class="section-label">PAUSE</div>
+        <div class="rest-countdown" id="rest-countdown">60</div>
+        <div class="chip-group" id="rest-options">
+          <button type="button" class="chip" data-sec="60">60S</button>
+          <button type="button" class="chip" data-sec="90">90S</button>
+          <button type="button" class="chip" data-sec="120">120S</button>
+        </div>
+        <button id="rest-skip" class="btn btn-primary btn-full">Pause überspringen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL ROOT (generic) ========== -->
+  <div id="modal-root"></div>
+
+  <div id="toast"></div>
+
+</div>
+
+<script src="./data.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
