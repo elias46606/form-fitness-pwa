@@ -131,8 +131,12 @@
         <h1 class="headline">Iss bewusst,<br><span class="fat">nicht weniger.</span></h1>
       </header>
 
-      <div class="search-row">
+      <div class="search-row search-row-flex">
         <input type="text" id="food-search" placeholder="Lebensmittel suchen…" autocomplete="off">
+        <button id="btn-scan" class="btn btn-primary btn-scan" type="button">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="2" height="18"/><rect x="6" y="3" width="1" height="18"/><rect x="9" y="3" width="3" height="18"/><rect x="14" y="3" width="1" height="18"/><rect x="17" y="3" width="2" height="18"/><rect x="21" y="3" width="1" height="18"/></svg>
+          <span>Scannen</span>
+        </button>
       </div>
 
       <div id="quick-recent" class="chip-scroll"></div>
@@ -311,6 +315,41 @@
         </div>
         <button id="rest-skip" class="btn btn-primary btn-full">Pause überspringen</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ========== BARCODE SCANNER OVERLAY ========== -->
+  <div id="scanner-overlay" class="overlay hidden">
+    <div class="scanner-inner">
+      <div class="scanner-top">
+        <span class="section-label">BARCODE SCANNEN</span>
+        <button class="btn-close" id="scanner-close">✕</button>
+      </div>
+
+      <div id="scanner-camera-state" class="scanner-state hidden">
+        <div id="scanner-viewport" class="scanner-viewport">
+          <video id="scanner-video" autoplay playsinline muted></video>
+          <div id="scanner-fallback-target" class="scanner-fallback-target hidden"></div>
+          <div class="scanner-frame"><div class="scanner-scanline"></div></div>
+        </div>
+      </div>
+
+      <div id="scanner-status-state" class="scanner-state hidden">
+        <p class="scanner-status-text" id="scanner-status-text">Kamera wird aktiviert…</p>
+      </div>
+
+      <div id="scanner-error-state" class="scanner-state hidden">
+        <p class="scanner-status-text" id="scanner-error-text"></p>
+        <button class="btn btn-primary btn-full" id="scanner-manual-btn">Barcode manuell eingeben</button>
+      </div>
+
+      <div id="scanner-manual-state" class="scanner-state hidden">
+        <div class="field-label">Barcode-Nummer</div>
+        <input type="text" id="scanner-manual-input" inputmode="numeric" placeholder="z. B. 4000417025005">
+        <button class="btn btn-primary btn-full" id="scanner-manual-submit">Suchen</button>
+      </div>
+
+      <button class="btn btn-ghost btn-full" id="scanner-cancel">Abbrechen</button>
     </div>
   </div>
 

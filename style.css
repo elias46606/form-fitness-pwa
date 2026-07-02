@@ -257,6 +257,21 @@ input:focus, select:focus, textarea:focus {
 
 .search-row { margin-bottom: 14px; }
 
+.search-row-flex {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.search-row-flex input { flex: 1; }
+
+.btn-scan {
+  flex-shrink: 0;
+  padding: 0 16px;
+}
+
+.btn-scan svg { flex-shrink: 0; }
+
 .steps-row {
   display: flex;
   gap: 10px;
@@ -826,6 +841,153 @@ input:focus, select:focus, textarea:focus {
 }
 
 .modal-title { font-size: 20px; font-weight: 800; }
+
+/* ==========================================================================
+   Barcode-Scanner
+   ========================================================================== */
+
+#scanner-overlay {
+  background: #000000;
+  color: var(--white);
+  padding: calc(20px + var(--safe-top)) 0 calc(24px + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+}
+
+#scanner-overlay.hidden { display: none; }
+
+.scanner-inner {
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.scanner-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.scanner-top .section-label { color: var(--white); margin-bottom: 0; }
+.scanner-top .btn-close { color: var(--white); }
+
+.scanner-state { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.scanner-state.hidden { display: none; }
+
+.scanner-viewport {
+  position: relative;
+  flex: 1;
+  min-height: 320px;
+  background: #111111;
+  overflow: hidden;
+}
+
+#scanner-video, .scanner-fallback-target {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scanner-fallback-target.hidden { display: none; }
+
+.scanner-fallback-target video, .scanner-fallback-target canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.scanner-frame {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 140px;
+  border: 2px solid var(--white);
+  overflow: hidden;
+}
+
+.scanner-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: var(--white);
+  animation: scanline-move 2s linear infinite;
+}
+
+@keyframes scanline-move {
+  0% { top: 0; }
+  50% { top: 100%; }
+  100% { top: 0; }
+}
+
+.scanner-status-text {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--white);
+  margin: auto 0 20px;
+}
+
+#scanner-error-state, #scanner-status-state, #scanner-manual-state { justify-content: center; }
+
+#scanner-manual-state input {
+  background: var(--white);
+  color: var(--ink);
+}
+
+#scanner-manual-state .field-label { color: #AAAAAA; }
+
+#scanner-cancel {
+  margin-top: 16px;
+  border-color: var(--white);
+  color: var(--white);
+  background: transparent;
+}
+
+/* ==========================================================================
+   Produkt-Detail (OpenFoodFacts)
+   ========================================================================== */
+
+.nutrient-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 14px;
+}
+
+.nutrient-row.sub-row {
+  padding-left: 12px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.nutrient-row:last-of-type { border-bottom: none; }
+
+.nutri-score-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--ink);
+  font-weight: 800;
+  font-size: 18px;
+  margin-bottom: 14px;
+}
 
 /* ==========================================================================
    Workout mode
